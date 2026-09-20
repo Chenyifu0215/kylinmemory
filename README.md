@@ -1,3 +1,5 @@
+> 本项目基于 [TencentCloud/TencentDB-Agent-Memory](https://github.com/TencentCloud/TencentDB-Agent-Memory) 改造而来。
+
 # kylinmemory
 
 kylinmemory 是一个独立的 Python 记忆系统，为 AI 应用提供对话存储、记忆提取、场景整理和用户画像能力。它接收对话或历史消息，返回可检索的记忆和可供模型使用的上下文，支持跨会话持久化。
