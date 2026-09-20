@@ -3,7 +3,7 @@ requires = ["setuptools>=77,<82"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kylin-memory"
+name = "kylinmemory"
 version = "0.2.0"
 description = "Standalone L0/L1/L2/L3 memory pipeline extracted from Kylin Agent"
 readme = "README.md"
@@ -19,11 +19,16 @@ dependencies = [
   "sqlite-vec==0.1.6",
 ]
 
+[project.urls]
+Repository = "https://github.com/Chenyifu0215/kylinmemory"
+
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.86,<0.88"]
 dev = ["pytest>=8,<10", "pytest-asyncio>=1.3,<2", "build>=1.2,<2", "anthropic>=0.86,<0.88"]
 
 [project.scripts]
+kylinmemory = "kylin_memory.cli:main"
+kylinmemory-profile = "kylin_memory.user_profile.cli:main"
 kylin-memory = "kylin_memory.cli:main"
 kylin-memory-profile = "kylin_memory.user_profile.cli:main"
 

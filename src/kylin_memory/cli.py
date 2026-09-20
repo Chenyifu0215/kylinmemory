@@ -37,7 +37,7 @@ def dispatch(system, request):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Standalone Kylin four-layer memory')
+    parser = argparse.ArgumentParser(description='kylinmemory: standalone four-layer memory')
     parser.add_argument('--home', type=Path, help='isolated data/config directory')
     parser.add_argument('--config', type=Path)
     parser.add_argument('--session', default='default')

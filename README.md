@@ -1,6 +1,6 @@
-# Kylin Memory
+# kylinmemory
 
-Kylin Memory 是一个独立的 Python 记忆系统，为 AI 应用提供对话存储、记忆提取、场景整理和用户画像能力。它接收对话或历史消息，返回可检索的记忆和可供模型使用的上下文，支持跨会话持久化。
+kylinmemory 是一个独立的 Python 记忆系统，为 AI 应用提供对话存储、记忆提取、场景整理和用户画像能力。它接收对话或历史消息，返回可检索的记忆和可供模型使用的上下文，支持跨会话持久化。
 
 项目提供 Python API、命令行和基于标准输入输出的 JSON Lines 服务，可独立运行，也可集成到已有应用中。记忆提取需要配置模型服务；对话回复由接入它的应用负责生成。
 
@@ -19,7 +19,7 @@ Kylin Memory 是一个独立的 Python 记忆系统，为 AI 应用提供对话�
 
 ```bash
 python -m pip install .
-kylin-memory --help
+kylinmemory --help
 ```
 
 使用原生 Anthropic 接口时，安装对应的可选依赖：
@@ -32,10 +32,10 @@ python -m pip install '.[anthropic]'
 
 ```bash
 uv sync --locked
-uv run kylin-memory --help
+uv run kylinmemory --help
 ```
 
-以下命令以已安装的 `kylin-memory` 为例；使用 uv 时，在命令前加上 `uv run`。
+以下命令以已安装的 `kylinmemory` 为例；使用 uv 时，在命令前加上 `uv run`。旧命令 `kylin-memory` 和 `kylin-memory-profile` 仍可使用；Python 导入名保持为 `kylin_memory`。
 
 ## 配置
 
@@ -80,17 +80,17 @@ export OPENAI_API_KEY='your-api-key'
 
 ```bash
 # 写入一轮对话
-kylin-memory --home ./data --session demo observe '以后请叫我小王。' --assistant '好的，小王。'
+kylinmemory --home ./data --session demo observe '以后请叫我小王。' --assistant '好的，小王。'
 
 # 检索记忆
-kylin-memory --home ./data --session demo recall '小王' --limit 5
+kylinmemory --home ./data --session demo recall '小王' --limit 5
 
 # 获取供模型使用的上下文
-kylin-memory --home ./data --session demo context '怎么称呼用户？'
+kylinmemory --home ./data --session demo context '怎么称呼用户？'
 
 # 查看记忆状态和场景列表
-kylin-memory --home ./data --session demo status
-kylin-memory --home ./data --session demo scenes
+kylinmemory --home ./data --session demo status
+kylinmemory --home ./data --session demo scenes
 ```
 
 命令输出 JSON。每条独立命令退出时会提交并关闭当前实例；需要持续处理多轮对话时，使用下面的 `serve` 或长期存活的 Python 实例。
@@ -100,7 +100,7 @@ kylin-memory --home ./data --session demo scenes
 启动持续运行的本地服务：
 
 ```bash
-kylin-memory --home ./data --session demo serve
+kylinmemory --home ./data --session demo serve
 ```
 
 标准输入每行接收一个 JSON 请求，标准输出每行返回一个 JSON 结果，日志写入标准错误。它使用本地进程通信，不提供 HTTP 或 MCP 接口。
@@ -172,7 +172,7 @@ with MemorySystem("./data", session_id="history-1") as memory:
     memory.commit()
 ```
 
-`backfill=True` 仅用于新建的空会话，保留历史时间戳。导入为追加操作，重复导入会重复写入。也可使用 `kylin-memory --home ./data --session history-1 ingest messages.json --backfill` 导入 JSON 文件。
+`backfill=True` 仅用于新建的空会话，保留历史时间戳。导入为追加操作，重复导入会重复写入。也可使用 `kylinmemory --home ./data --session history-1 ingest messages.json --backfill` 导入 JSON 文件。
 
 已有应用可通过 `client=` 注入 OpenAI 兼容客户端，或通过 `main_runtime=` 回调提供实时模型配置。
 
