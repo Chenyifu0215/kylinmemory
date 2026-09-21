@@ -31,7 +31,7 @@ credentials.json
 
 # Runtime data, databases and logs
 /data/
-/.kylin-memory/
+/.kylinmemory/
 /records/
 /profiles/
 /user_profile/

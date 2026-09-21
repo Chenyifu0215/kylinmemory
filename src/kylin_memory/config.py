@@ -17,7 +17,7 @@ def get_hermes_home() -> Path:
     context = _context.get()
     if context is not None:
         return context[0]
-    return Path(os.environ.get('KYLIN_MEMORY_HOME') or os.environ.get('HERMES_HOME') or Path.home() / '.kylin-memory').expanduser()
+    return Path(os.environ.get('KYLINMEMORY_HOME') or os.environ.get('HERMES_HOME') or Path.home() / '.kylinmemory').expanduser()
 
 
 def get_config_path() -> Path:

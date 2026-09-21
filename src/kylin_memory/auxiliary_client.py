@@ -24,7 +24,7 @@ def resolve_runtime(runtime=None):
     if runtime and runtime.get('provider') and runtime['provider'] != cfg.get('provider'):
         for key in ('base_url', 'api_key', 'api_key_env', 'api_mode'):
             values[key] = runtime.get(key) or ''
-    values['model'] = values.get('model') or values.get('default') or get_env_value('KYLIN_MEMORY_MODEL')
+    values['model'] = values.get('model') or values.get('default') or get_env_value('KYLINMEMORY_MODEL')
     # The source's live runtime carries a provider explicitly. Preserve the
     # standalone custom-endpoint shorthand when only URL/client was supplied.
     if not values.get('provider') or values['provider'] == 'auto':

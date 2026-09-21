@@ -28,7 +28,7 @@ class KeyProvider(Protocol):
 
 
 class EnvironmentKeyProvider:
-    def __init__(self, variable: str = "KYLIN_PROFILE_KEY") -> None:
+    def __init__(self, variable: str = "KYLINMEMORY_PROFILE_KEY") -> None:
         self.variable = variable
 
     def get_key(self) -> bytes:

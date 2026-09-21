@@ -35,12 +35,12 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path(
             os.environ.get(
-                "KYLIN_PROFILE_HOME", str(get_hermes_home() / "user_profile")
+                "KYLINMEMORY_PROFILE_HOME", str(get_hermes_home() / "user_profile")
             )
         ),
         help=(
             "Profile storage directory (default: "
-            "$KYLIN_PROFILE_HOME or active HERMES_HOME/user_profile)"
+            "$KYLINMEMORY_PROFILE_HOME or active HERMES_HOME/user_profile)"
         ),
     )
     subparsers = parser.add_subparsers(dest="command", required=True)

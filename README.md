@@ -37,7 +37,7 @@ uv sync --locked
 uv run kylinmemory --help
 ```
 
-以下命令以已安装的 `kylinmemory` 为例；使用 uv 时，在命令前加上 `uv run`。旧命令 `kylin-memory` 和 `kylin-memory-profile` 仍可使用；Python 导入名保持为 `kylin_memory`。
+以下命令以已安装的 `kylinmemory` 为例；使用 uv 时，在命令前加上 `uv run`。Python 导入名为 `kylin_memory`。
 
 ## 配置
 
@@ -76,7 +76,7 @@ export OPENAI_API_KEY='your-api-key'
 
 向量检索配置见 [examples/config.yaml](examples/config.yaml)。启用前需要填写可用的 embedding 服务地址；设置 `embedding.mode: disabled` 可仅使用全文检索。
 
-默认数据目录是 `~/.kylin-memory/`。可用 `--home`、Python 的 `home` 参数或 `KYLIN_MEMORY_HOME` 指定；未指定时也兼容 `HERMES_HOME`。以下示例统一使用 `./data`。
+默认数据目录是 `~/.kylinmemory/`。可用 `--home`、Python 的 `home` 参数或 `KYLINMEMORY_HOME` 指定；未指定时也兼容 `HERMES_HOME`。以下示例统一使用 `./data`。
 
 ## 命令行
 

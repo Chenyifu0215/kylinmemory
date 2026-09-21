@@ -418,7 +418,7 @@ class OpenAICompatibleProfileExtractor:
                 if proxy_url and proxy_url.lower().startswith("socks"):
                     raise RuntimeError(
                         "SOCKS 代理需要额外依赖，请运行 pip install 'httpx[socks]'，"
-                        "或将 KYLIN_PROFILE_LLM_PROXY_URL 改为 HTTP 代理地址"
+                        "或将 KYLINMEMORY_PROFILE_LLM_PROXY_URL 改为 HTTP 代理地址"
                     ) from exc
                 raise
             client = OpenAI(api_key=api_key, base_url=base_url, http_client=http_client)
@@ -432,32 +432,32 @@ class OpenAICompatibleProfileExtractor:
 
     @classmethod
     def from_environment(cls) -> "OpenAICompatibleProfileExtractor":
-        api_key = _environment_value("KYLIN_PROFILE_LLM_API_KEY", "OPENAI_API_KEY")
+        api_key = _environment_value("KYLINMEMORY_PROFILE_LLM_API_KEY", "OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError(
-                "missing KYLIN_PROFILE_LLM_API_KEY (or legacy OPENAI_API_KEY)"
+                "missing KYLINMEMORY_PROFILE_LLM_API_KEY (or legacy OPENAI_API_KEY)"
             )
-        model = _environment_value("KYLIN_PROFILE_LLM_MODEL", "OPENAI_PROFILE_MODEL")
+        model = _environment_value("KYLINMEMORY_PROFILE_LLM_MODEL", "OPENAI_PROFILE_MODEL")
         if not model:
             raise RuntimeError(
-                "missing KYLIN_PROFILE_LLM_MODEL (or legacy OPENAI_PROFILE_MODEL)"
+                "missing KYLINMEMORY_PROFILE_LLM_MODEL (or legacy OPENAI_PROFILE_MODEL)"
             )
-        base_url = _environment_value("KYLIN_PROFILE_LLM_BASE_URL", "OPENAI_BASE_URL")
+        base_url = _environment_value("KYLINMEMORY_PROFILE_LLM_BASE_URL", "OPENAI_BASE_URL")
         trust_env = _environment_boolean_alias(
-            "KYLIN_PROFILE_LLM_TRUST_ENV", "OPENAI_TRUST_ENV", default=True
+            "KYLINMEMORY_PROFILE_LLM_TRUST_ENV", "OPENAI_TRUST_ENV", default=True
         )
         proxy_url = _configured_proxy() if trust_env else None
         api_mode = (
-            _environment_value("KYLIN_PROFILE_LLM_API_MODE", "OPENAI_API_MODE")
+            _environment_value("KYLINMEMORY_PROFILE_LLM_API_MODE", "OPENAI_API_MODE")
             or "chat_completions"
         ).strip().lower()
         if api_mode not in {"auto", "responses", "chat_completions"}:
             raise RuntimeError(
-                "KYLIN_PROFILE_LLM_API_MODE must be auto, responses, or "
+                "KYLINMEMORY_PROFILE_LLM_API_MODE must be auto, responses, or "
                 "chat_completions"
             )
         max_chunk_chars = _environment_integer(
-            "KYLIN_PROFILE_LLM_CHUNK_CHARS", default=DEFAULT_MAX_CHUNK_CHARS
+            "KYLINMEMORY_PROFILE_LLM_CHUNK_CHARS", default=DEFAULT_MAX_CHUNK_CHARS
         )
         return cls(
             model=model,
@@ -1213,7 +1213,7 @@ def _environment_boolean_alias(primary: str, legacy: str, *, default: bool) -> b
 
 def _configured_proxy() -> str | None:
     for name in (
-        "KYLIN_PROFILE_LLM_PROXY_URL",
+        "KYLINMEMORY_PROFILE_LLM_PROXY_URL",
         "OPENAI_PROXY_URL",
         "HTTPS_PROXY",
         "https_proxy",

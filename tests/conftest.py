@@ -27,4 +27,4 @@ def isolated_environment(tmp_path, monkeypatch):
         if key.endswith(('_API_KEY', '_TOKEN', '_SECRET', '_PASSWORD')):
             monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'home'))
-    monkeypatch.delenv('KYLIN_MEMORY_HOME', raising=False)
+    monkeypatch.delenv('KYLINMEMORY_HOME', raising=False)
