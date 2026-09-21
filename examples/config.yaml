@@ -2,6 +2,7 @@
 model:
   provider: custom
   model: your-competition-model
+  # chat_completions 模式只填域名时自动补 /v1；已有路径保持原样
   base_url: https://your-inference-service.example/v1
   api_mode: chat_completions
   api_key_env: OPENAI_API_KEY
@@ -19,9 +20,10 @@ memory:
     enable_warmup: true
     embedding:
       mode: remote
-      model: qwen-embedding
-      dimensions: auto
-      base_url: http://127.0.0.1:18080/v1/infer
-      api_key_env: ""
+      model: your-competition-model
+      dimensions: auto  # 根据返回向量长度自动识别，不修改模型输出维度
+      # 支持 API 基础地址（自动追加 /embeddings）或完整 /v1/embeddings 地址
+      base_url: https://your-inference-service.example/v1
+      api_key_env: OPENAI_API_KEY
 user_profile:
   enabled: true

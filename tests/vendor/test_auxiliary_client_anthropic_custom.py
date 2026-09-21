@@ -18,12 +18,12 @@ def _clean_env(monkeypatch):
 def _install_anthropic_adapter_mocks():
     """Patch build_anthropic_client so the test doesn't need the SDK."""
     fake_client = MagicMock(name='anthropic_client')
-    return (patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_client), fake_client)
+    return (patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_client), fake_client)
 
 def test_custom_endpoint_anthropic_messages_builds_anthropic_wrapper():
     """api_mode=anthropic_messages → returns AnthropicAuxiliaryClient, not OpenAI."""
-    from kylin_memory._vendor.agent.auxiliary_client import _try_custom_endpoint, AnthropicAuxiliaryClient
-    with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.minimax.io/anthropic', 'minimax-key', 'anthropic_messages')), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-sonnet-4-6'):
+    from kylinmemory._vendor.agent.auxiliary_client import _try_custom_endpoint, AnthropicAuxiliaryClient
+    with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.minimax.io/anthropic', 'minimax-key', 'anthropic_messages')), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-sonnet-4-6'):
         adapter_patch, fake_client = _install_anthropic_adapter_mocks()
         with adapter_patch:
             client, model = _try_custom_endpoint()
@@ -34,19 +34,19 @@ def test_custom_endpoint_anthropic_messages_builds_anthropic_wrapper():
 
 def test_custom_endpoint_anthropic_messages_falls_back_when_sdk_missing():
     """Graceful degradation when anthropic SDK is unavailable."""
-    from kylin_memory._vendor.agent.auxiliary_client import _try_custom_endpoint
+    from kylinmemory._vendor.agent.auxiliary_client import _try_custom_endpoint
     import_error = ImportError('anthropic package not installed')
-    with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.minimax.io/anthropic', 'k', 'anthropic_messages')), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-sonnet-4-6'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', side_effect=import_error):
+    with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.minimax.io/anthropic', 'k', 'anthropic_messages')), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-sonnet-4-6'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', side_effect=import_error):
         client, model = _try_custom_endpoint()
     assert client is not None
     assert model == 'claude-sonnet-4-6'
-    from kylin_memory._vendor.agent.auxiliary_client import AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import AnthropicAuxiliaryClient
     assert not isinstance(client, AnthropicAuxiliaryClient)
 
 def test_custom_endpoint_chat_completions_still_uses_openai_wire():
     """Regression: default path (no api_mode) must remain OpenAI client."""
-    from kylin_memory._vendor.agent.auxiliary_client import _try_custom_endpoint, AnthropicAuxiliaryClient
-    with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.example.com/v1', 'key', None)), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='my-model'):
+    from kylinmemory._vendor.agent.auxiliary_client import _try_custom_endpoint, AnthropicAuxiliaryClient
+    with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.example.com/v1', 'key', None)), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='my-model'):
         client, model = _try_custom_endpoint()
     assert client is not None
     assert model == 'my-model'

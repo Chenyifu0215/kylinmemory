@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from kylin_memory.l1_memory_provider import AtomMemoryProvider
-from kylin_memory.memory_pipeline import MemoryPipelineManager
+from kylinmemory.l1_memory_provider import AtomMemoryProvider
+from kylinmemory.memory_pipeline import MemoryPipelineManager
 
 
 class _Extractor:

@@ -7,8 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kylin_memory import MemorySystem
-from kylin_memory.config import get_hermes_home, load_config, runtime_context, context_timer
+from kylinmemory import MemorySystem
+from kylinmemory.config import get_hermes_home, load_config, runtime_context, context_timer
 
 
 def response(name, arguments):
@@ -129,7 +129,7 @@ def test_user_isolation_and_context_thread_propagation(tmp_path):
 def test_sdk_http_transport_and_deepseek_named_tool_contract():
     import httpx
     from openai import OpenAI
-    from kylin_memory.auxiliary_client import call_llm, extract_tool_call_arguments
+    from kylinmemory.auxiliary_client import call_llm, extract_tool_call_arguments
     seen = []
     def handle(request):
         seen.append(json.loads(request.content))
@@ -150,14 +150,14 @@ def test_sdk_http_transport_and_deepseek_named_tool_contract():
 def test_json_service_and_plugin_install_outside_repository(tmp_path):
     cfg = tmp_path / 'config.yaml'
     cfg.write_text('memory:\n  atom:\n    enabled: false\nuser_profile:\n  enabled: false\n')
-    command = [sys.executable, '-m', 'kylin_memory', '--home', str(tmp_path / 'state'), '--config', str(cfg), 'serve']
+    command = [sys.executable, '-m', 'kylinmemory', '--home', str(tmp_path / 'state'), '--config', str(cfg), 'serve']
     requests = '\n'.join([json.dumps({'id': 1, 'method': 'status'}), '{broken', json.dumps({'id': 2, 'method': 'status'})])
     result = subprocess.run(command, input=requests, capture_output=True, text=True, cwd=tmp_path, check=True)
     lines = [json.loads(line) for line in result.stdout.splitlines()]
     assert lines[0]['result']['l0'] == 0
     assert lines[1]['error']['type'] == 'JSONDecodeError'
     assert lines[2]['id'] == 2
-    from kylin_memory.cli import install_plugin
+    from kylinmemory.cli import install_plugin
     installed = tmp_path / 'plugin'
     install_plugin(installed)
     assert 'register_memory_provider' in (installed / '__init__.py').read_text()
@@ -174,7 +174,7 @@ class BlockHost:
         if fullname.split('.')[0] in {'agent', 'tools', 'plugins', 'run_agent', 'kylin_agent_runtime_cli', 'kylin_agent_runtime_constants', 'kylin_agent_runtime_state'}:
             raise AssertionError('host import: ' + fullname)
 sys.meta_path.insert(0, BlockHost())
-from kylin_memory import MemorySystem
+from kylinmemory import MemorySystem
 with MemorySystem(sys.argv[1], config={'memory': {'atom': {'enabled': False}}, 'user_profile': {'enabled': False}}) as memory:
     assert memory.status()['l0'] == 0
 '''

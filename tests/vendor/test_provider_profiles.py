@@ -1,7 +1,7 @@
 """Tests for the provider module registry and profiles."""
 import pytest
-from kylin_memory._vendor.providers import get_provider_profile, _REGISTRY
-from kylin_memory._vendor.providers.base import ProviderProfile, OMIT_TEMPERATURE
+from kylinmemory._vendor.providers import get_provider_profile, _REGISTRY
+from kylinmemory._vendor.providers.base import ProviderProfile, OMIT_TEMPERATURE
 
 class TestRegistry:
 
@@ -179,7 +179,7 @@ class TestOpenRouterProfile:
 class TestNousProfile:
 
     def test_tags(self):
-        from kylin_memory._vendor.agent.portal_tags import nous_portal_tags
+        from kylinmemory._vendor.agent.portal_tags import nous_portal_tags
         p = get_provider_profile('nous')
         body = p.build_extra_body()
         assert body['tags'] == nous_portal_tags()

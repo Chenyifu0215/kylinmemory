@@ -4,10 +4,10 @@ from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
 
-from kylin_memory.cli import install_plugin
-from kylin_memory.config import runtime_context
-from kylin_memory.plugin import LayeredMemoryProvider, attach
-from kylin_memory.state import SessionDB
+from kylinmemory.cli import install_plugin
+from kylinmemory.config import runtime_context
+from kylinmemory.plugin import LayeredMemoryProvider, attach
+from kylinmemory.state import SessionDB
 from test_runtime import Model, config
 
 
@@ -61,8 +61,8 @@ def test_installed_directory_plugin_drives_all_four_layers(tmp_path, monkeypatch
     provider.on_turn_start(1, 'test')
     # Source host owns L3: commit via its MemoryManager projection hooks,
     # and refresh profile at every turn independently of cached L2 navigation.
-    from kylin_memory.memory_manager import MemoryManager
-    from kylin_memory.user_profile_runtime import (
+    from kylinmemory.memory_manager import MemoryManager
+    from kylinmemory.user_profile_runtime import (
         initialize_user_profile, commit_user_profile_session, build_user_profile_prompt,
     )
     host_manager = MemoryManager()
@@ -98,7 +98,7 @@ def test_attach_keeps_host_message_store_and_live_l3_client(tmp_path, monkeypatc
     assert agent._user_profile_runtime is system.agent._user_profile_runtime
     system.observe('以后请叫我小王。')
     agent.model = 'second'
-    from kylin_memory.user_profile_runtime import commit_user_profile_session
+    from kylinmemory.user_profile_runtime import commit_user_profile_session
     result = commit_user_profile_session(agent, db.get_messages('s1'))
     assert result['status'] == 'success'
     assert all(call['model'] == 'second' for call in model.calls)

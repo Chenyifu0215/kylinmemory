@@ -6,7 +6,7 @@ The auxiliary client uses the OpenAI SDK, which needs /v1 instead.
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from kylin_memory._vendor.agent.auxiliary_client import _to_openai_base_url
+from kylinmemory._vendor.agent.auxiliary_client import _to_openai_base_url
 
 class TestToOpenaiBaseUrl:
 

@@ -6,10 +6,10 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-import kylin_memory.memory_layers as memory_layers
-from kylin_memory.l1_memory_provider import AtomMemoryProvider
-from kylin_memory.memory_layers import Atom, ScenarioStore
-from kylin_memory.memory_pipeline import MemoryPipelineManager
+import kylinmemory.memory_layers as memory_layers
+from kylinmemory.l1_memory_provider import AtomMemoryProvider
+from kylinmemory.memory_layers import Atom, ScenarioStore
+from kylinmemory.memory_pipeline import MemoryPipelineManager
 
 
 def _message(message_id: int, content: str = "Python runtime deployment") -> dict:

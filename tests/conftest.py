@@ -20,7 +20,7 @@ def pytest_collection_modifyitems(items):
 def isolated_environment(tmp_path, monkeypatch):
     import os
     from pathlib import Path
-    from kylin_memory import auxiliary_client
+    from kylinmemory import auxiliary_client
     monkeypatch.setattr(auxiliary_client, '_default_router', None)
     monkeypatch.setattr(Path, 'home', classmethod(lambda cls: tmp_path))
     for key in list(os.environ):

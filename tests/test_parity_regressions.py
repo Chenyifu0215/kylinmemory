@@ -6,11 +6,11 @@ import httpx
 import openai
 import pytest
 
-from kylin_memory import MemorySystem
-from kylin_memory.auxiliary_client import _get_cached_client, call_llm, _resolve_task_provider_model
-from kylin_memory.config import DEFAULT_CONFIG, get_env_value, merge_config, runtime_context
-from kylin_memory.plugin import LayeredMemoryProvider
-from kylin_memory.routing import resolve_runtime
+from kylinmemory import MemorySystem
+from kylinmemory.auxiliary_client import _get_cached_client, call_llm, _resolve_task_provider_model
+from kylinmemory.config import DEFAULT_CONFIG, get_env_value, merge_config, runtime_context
+from kylinmemory.plugin import LayeredMemoryProvider
+from kylinmemory.routing import resolve_runtime
 from test_plugin import fake_host
 from test_runtime import Model, config
 
@@ -45,7 +45,7 @@ def test_incremental_import_without_timestamps_never_loses_same_tick_rows(tmp_pa
     model = Model()
     with MemorySystem(tmp_path, config=config(), client=model) as memory:
         instant = memory.provider._l0_recorder.plugin_start_ms / 1000
-        monkeypatch.setattr('kylin_memory.runtime.time.time', lambda: instant)
+        monkeypatch.setattr('kylinmemory.runtime.time.time', lambda: instant)
         for _ in range(3):
             memory.ingest([{'role': 'user', 'content': '以后请叫我小王。'},
                            {'role': 'assistant', 'content': '好的。'}])
@@ -133,7 +133,7 @@ def test_live_provider_switch_does_not_keep_old_endpoint(tmp_path, monkeypatch):
 def test_source_fallback_argument_mismatch_is_preserved():
     # Source calls resolve_provider_client(base_url=...), whose parameter is
     # explicit_base_url. Preserve the source implementation, not v0.1.1's fix.
-    from kylin_memory._vendor.agent.auxiliary_client import _resolve_single_provider
+    from kylinmemory._vendor.agent.auxiliary_client import _resolve_single_provider
     with pytest.raises(TypeError, match="base_url"):
         _resolve_single_provider('openrouter', 'backup', 'https://backup.invalid/v1', 'test')
 
@@ -141,7 +141,7 @@ def test_source_fallback_argument_mismatch_is_preserved():
 @pytest.mark.parametrize('mode', ['anthropic_messages'])
 def test_native_sdk_transports_preserve_structured_tools(tmp_path, monkeypatch, mode):
     import json
-    from kylin_memory.auxiliary_client import extract_tool_call_arguments
+    from kylinmemory.auxiliary_client import extract_tool_call_arguments
     requests, clients = [], []
     def handle(request):
         body = json.loads(request.content)
@@ -257,7 +257,7 @@ def test_directory_provider_explicit_runtime_tracks_live_host_without_model_kwar
 
 def test_directory_provider_reads_actual_source_live_runtime_without_model_kwarg(tmp_path, monkeypatch):
     import sys
-    from kylin_memory._vendor.agent import auxiliary_client as source
+    from kylinmemory._vendor.agent import auxiliary_client as source
     model = Model()
     fake_host(monkeypatch, tmp_path, model)
     host = sys.modules['agent.auxiliary_client']
@@ -288,9 +288,9 @@ def test_directory_provider_reads_actual_source_live_runtime_without_model_kwarg
     'model: [broken\n',
 ])
 def test_config_normalization_matches_source_loader(tmp_path, monkeypatch, yaml_text):
-    from kylin_memory.config import load_config
-    from kylin_memory._vendor.kylin_agent_runtime_cli import config as source
-    from kylin_memory._vendor.kylin_agent_runtime_constants import set_hermes_home_override, reset_hermes_home_override
+    from kylinmemory.config import load_config
+    from kylinmemory._vendor.kylin_agent_runtime_cli import config as source
+    from kylinmemory._vendor.kylin_agent_runtime_constants import set_hermes_home_override, reset_hermes_home_override
     monkeypatch.setenv('MEMORY_TEST_MODEL', 'expanded-model')
     (tmp_path / 'config.yaml').write_text(yaml_text)
     token = set_hermes_home_override(tmp_path)
@@ -302,8 +302,8 @@ def test_config_normalization_matches_source_loader(tmp_path, monkeypatch, yaml_
 
 
 def test_interrupt_uses_source_thread_signal():
-    from kylin_memory.interrupt import set_interrupt, is_interrupted
-    from kylin_memory._vendor.tools import interrupt as source
+    from kylinmemory.interrupt import set_interrupt, is_interrupted
+    from kylinmemory._vendor.tools import interrupt as source
     set_interrupt(True)
     try:
         assert source.is_interrupted() and is_interrupted()

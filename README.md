@@ -37,7 +37,7 @@ uv sync --locked
 uv run kylinmemory --help
 ```
 
-以下命令以已安装的 `kylinmemory` 为例；使用 uv 时，在命令前加上 `uv run`。Python 导入名为 `kylin_memory`。
+以下命令以已安装的 `kylinmemory` 为例；使用 uv 时，在命令前加上 `uv run`。Python 导入名为 `kylinmemory`。
 
 ## 配置
 
@@ -54,6 +54,7 @@ mkdir -p ~/.kylinmemory
 model:
   provider: custom
   model: your-model-name
+  # chat_completions 模式只填域名时自动补 /v1；已有路径保持原样
   base_url: https://your-model-service.example/v1
   api_mode: chat_completions
   api_key_env: OPENAI_API_KEY
@@ -68,7 +69,7 @@ user_profile:
   enabled: true
 ```
 
-上面配置中的 `embedding.mode: disabled` 表示仅使用全文检索；如需启用向量检索，将其改为 `remote` 并填写可用的 embedding 服务地址，可参考 [examples/config.yaml](examples/config.yaml)。
+上面配置中的 `embedding.mode: disabled` 表示仅使用全文检索；如需启用向量检索，将其改为 `remote`，并配置支持标准 OpenAI Embeddings 协议的模型、地址和密钥变量。`base_url` 可填 `https://服务地址/v1`（自动追加 `/embeddings`）或完整接口地址；`dimensions: auto` 自动识别返回维度，`api_key_env` 填 `.env` 中的变量名。完整示例可参考 [examples/config.yaml](examples/config.yaml)。
 
 通过环境变量提供 API key，也可以放在数据目录（默认.kylinmemory）的 `.env` 文件中。环境变量优先：
 
@@ -135,7 +136,7 @@ kylinmemory --session demo serve
 ## Python API
 
 ```python
-from kylin_memory import MemorySystem
+from kylinmemory import MemorySystem
 
 with MemorySystem(
     session_id="session-1",
@@ -197,7 +198,7 @@ uv sync --locked --extra dev
 bash scripts/run_tests.sh -q
 ```
 
-核心代码位于 `src/kylin_memory/`，测试位于 `tests/`。运行所需的内置适配代码随包发布，无需安装原 Agent 仓库。
+核心代码位于 `src/kylinmemory/`，测试位于 `tests/`。运行所需的内置适配代码随包发布，无需安装原 Agent 仓库。
 
 ## 许可证
 

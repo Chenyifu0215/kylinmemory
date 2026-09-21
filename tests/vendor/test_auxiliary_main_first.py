@@ -20,10 +20,10 @@ class TestResolveAutoMainFirst:
     def test_openrouter_main_uses_main_model_for_aux(self, monkeypatch):
         """OpenRouter main user → aux uses their picked OR model, not Gemini Flash."""
         monkeypatch.setenv('OPENROUTER_API_KEY', 'or-test-key')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4.6'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4.6'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
             mock_client = MagicMock()
             mock_resolve.return_value = (mock_client, 'anthropic/claude-sonnet-4.6')
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
             client, model = _resolve_auto()
         assert client is mock_client
         assert model == 'anthropic/claude-sonnet-4.6'
@@ -33,10 +33,10 @@ class TestResolveAutoMainFirst:
 
     def test_nous_main_uses_main_model_for_aux(self, monkeypatch):
         """Nous Portal main user → aux uses their picked Nous model, not free-tier MiMo."""
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='nous'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-opus-4.6'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='nous'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-opus-4.6'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
             mock_client = MagicMock()
             mock_resolve.return_value = (mock_client, 'anthropic/claude-opus-4.6')
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
             client, model = _resolve_auto()
         assert client is mock_client
         assert model == 'anthropic/claude-opus-4.6'
@@ -45,10 +45,10 @@ class TestResolveAutoMainFirst:
     def test_non_aggregator_main_still_uses_main(self, monkeypatch):
         """Non-aggregator main (DeepSeek) → unchanged behavior, main model used."""
         monkeypatch.setenv('DEEPSEEK_API_KEY', 'ds-test')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='deepseek'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='deepseek-chat'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='deepseek'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='deepseek-chat'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
             mock_client = MagicMock()
             mock_resolve.return_value = (mock_client, 'deepseek-chat')
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
             client, model = _resolve_auto()
         assert client is mock_client
         assert model == 'deepseek-chat'
@@ -58,8 +58,8 @@ class TestResolveAutoMainFirst:
         """Main provider with no working client → fall back to aux chain."""
         monkeypatch.setenv('OPENROUTER_API_KEY', 'or-key')
         chain_client = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='anthropic'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-opus'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter', return_value=(chain_client, 'google/gemini-3-flash-preview')):
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='anthropic'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-opus'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter', return_value=(chain_client, 'google/gemini-3-flash-preview')):
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
             client, model = _resolve_auto()
         assert client is chain_client
         assert model == 'google/gemini-3-flash-preview'
@@ -67,16 +67,16 @@ class TestResolveAutoMainFirst:
     def test_no_main_config_uses_chain_directly(self):
         """No main provider configured → skip step 1, use chain (no regression)."""
         chain_client = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value=''), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value=''), patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter', return_value=(chain_client, 'google/gemini-3-flash-preview')):
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value=''), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value=''), patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter', return_value=(chain_client, 'google/gemini-3-flash-preview')):
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
             client, model = _resolve_auto()
         assert client is chain_client
 
     def test_runtime_override_wins_over_config(self, monkeypatch):
         """main_runtime kwarg overrides config-read main provider/model."""
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='config-model'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='config-model'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve:
             mock_resolve.return_value = (MagicMock(), 'runtime-model')
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
             _resolve_auto(main_runtime={'provider': 'anthropic', 'model': 'runtime-model', 'base_url': '', 'api_key': '', 'api_mode': ''})
         assert mock_resolve.call_args.args[0] == 'anthropic'
         assert mock_resolve.call_args.args[1] == 'runtime-model'
@@ -87,10 +87,10 @@ class TestResolveVisionMainFirst:
     def test_openrouter_main_vision_uses_main_model(self, monkeypatch):
         """OpenRouter main with vision-capable model → aux vision uses main model."""
         monkeypatch.setenv('OPENROUTER_API_KEY', 'or-key')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4.6'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve, patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4.6'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve, patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)):
             mock_client = MagicMock()
             mock_resolve.return_value = (mock_client, 'anthropic/claude-sonnet-4.6')
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert provider == 'openrouter'
         assert client is mock_client
@@ -102,8 +102,8 @@ class TestResolveVisionMainFirst:
 
     def test_nous_main_vision_uses_paid_nous_vision_backend(self):
         """Paid Nous main → aux vision uses the dedicated Nous vision backend."""
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='nous'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='openai/gpt-5'), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', return_value=(MagicMock(), 'google/gemini-3-flash-preview')):
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='nous'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='openai/gpt-5'), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', return_value=(MagicMock(), 'google/gemini-3-flash-preview')):
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert provider == 'nous'
         assert client is not None
@@ -111,8 +111,8 @@ class TestResolveVisionMainFirst:
 
     def test_nous_main_vision_uses_free_tier_nous_vision_backend(self):
         """Free-tier Nous main → aux vision uses MiMo omni, not the text main model."""
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='nous'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='xiaomi/mimo-v2-pro'), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', return_value=(MagicMock(), 'xiaomi/mimo-v2-omni')):
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='nous'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='xiaomi/mimo-v2-pro'), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', return_value=(MagicMock(), 'xiaomi/mimo-v2-omni')):
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert provider == 'nous'
         assert client is not None
@@ -120,9 +120,9 @@ class TestResolveVisionMainFirst:
 
     def test_exotic_provider_with_vision_override_preserved(self):
         """xiaomi → mimo-v2.5 override still wins over main_model."""
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='xiaomi'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='mimo-v2-pro'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve, patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='xiaomi'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='mimo-v2-pro'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client') as mock_resolve, patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)):
             mock_resolve.return_value = (MagicMock(), 'mimo-v2.5')
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert provider == 'xiaomi'
         assert mock_resolve.call_args.args[1] == 'mimo-v2.5'
@@ -137,10 +137,10 @@ class TestResolveVisionMainFirst:
             captured['is_agent_turn'] = is_agent_turn
             captured['is_vision'] = is_vision
             return {'Copilot-Vision-Request': 'true'} if is_vision else {}
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='copilot'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='configured-copilot-model'), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'provider': 'copilot', 'api_key': 'copilot-api-token', 'base_url': 'https://api.githubcopilot.com'}), patch('kylin_memory._vendor.kylin_agent_runtime_cli.copilot_auth.copilot_request_headers', side_effect=fake_headers):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='copilot'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='configured-copilot-model'), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'provider': 'copilot', 'api_key': 'copilot-api-token', 'base_url': 'https://api.githubcopilot.com'}), patch('kylinmemory._vendor.kylin_agent_runtime_cli.copilot_auth.copilot_request_headers', side_effect=fake_headers):
             mock_client = MagicMock()
             mock_openai.return_value = mock_client
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert provider == 'copilot'
         assert client is mock_client
@@ -157,10 +157,10 @@ class TestResolveVisionMainFirst:
             captured['is_agent_turn'] = is_agent_turn
             captured['is_vision'] = is_vision
             return {'Copilot-Vision-Request': 'true'} if is_vision else {}
-        with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'provider': 'copilot', 'api_key': 'copilot-api-token', 'base_url': 'https://api.githubcopilot.com'}), patch('kylin_memory._vendor.kylin_agent_runtime_cli.copilot_auth.copilot_request_headers', side_effect=fake_headers):
+        with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'provider': 'copilot', 'api_key': 'copilot-api-token', 'base_url': 'https://api.githubcopilot.com'}), patch('kylinmemory._vendor.kylin_agent_runtime_cli.copilot_auth.copilot_request_headers', side_effect=fake_headers):
             mock_client = MagicMock()
             mock_openai.return_value = mock_client
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
             client, model = resolve_provider_client('copilot', 'gpt-5-mini')
         assert client is mock_client
         assert model == 'gpt-5-mini'
@@ -170,17 +170,17 @@ class TestResolveVisionMainFirst:
     def test_main_unavailable_vision_falls_through_to_aggregators(self):
         """Main provider fails → fall back to OpenRouter/Nous strict backends."""
         fallback_client = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='deepseek'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='deepseek-chat'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', return_value=(fallback_client, 'google/gemini-3-flash-preview')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)):
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='deepseek'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='deepseek-chat'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', return_value=(fallback_client, 'google/gemini-3-flash-preview')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', None, None, None, None)):
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert client is fallback_client
         assert provider in {'openrouter', 'nous'}
 
     def test_explicit_provider_override_still_wins(self):
         """Explicit config override bypasses main-first policy."""
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-opus-4.6'), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('nous', None, None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_strict_vision_backend') as mock_strict:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-opus-4.6'), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('nous', None, None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_strict_vision_backend') as mock_strict:
             mock_strict.return_value = (MagicMock(), 'nous-default-model')
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert provider == 'nous'
         mock_strict.assert_called_once_with('nous', None)
@@ -190,5 +190,5 @@ def test_aggregator_providers_constant_removed():
 
     Removed when the main-first policy made the aggregator-skip guard obsolete.
     """
-    import kylin_memory._vendor.agent.auxiliary_client as aux_mod
+    import kylinmemory._vendor.agent.auxiliary_client as aux_mod
     assert not hasattr(aux_mod, '_AGGREGATOR_PROVIDERS'), '_AGGREGATOR_PROVIDERS was removed when _resolve_auto stopped treating aggregators specially. If you re-added it, the main-first policy may have regressed.'

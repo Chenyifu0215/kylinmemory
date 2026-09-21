@@ -7,7 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock, AsyncMock
 import pytest
-from kylin_memory._vendor.agent.auxiliary_client import get_text_auxiliary_client, get_available_vision_backends, resolve_vision_provider_client, resolve_provider_client, auxiliary_max_tokens_param, call_llm, async_call_llm, _build_call_kwargs, _read_codex_access_token, _get_provider_chain, _is_payment_error, _is_rate_limit_error, _normalize_aux_provider, _try_payment_fallback, _resolve_auto, _resolve_xai_oauth_for_aux, _CodexCompletionsAdapter
+from kylinmemory._vendor.agent.auxiliary_client import get_text_auxiliary_client, get_available_vision_backends, resolve_vision_provider_client, resolve_provider_client, auxiliary_max_tokens_param, call_llm, async_call_llm, _build_call_kwargs, _read_codex_access_token, _get_provider_chain, _is_payment_error, _is_rate_limit_error, _normalize_aux_provider, _try_payment_fallback, _resolve_auto, _resolve_xai_oauth_for_aux, _CodexCompletionsAdapter
 
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch):
@@ -22,17 +22,17 @@ def codex_auth_dir(tmp_path, monkeypatch):
     codex_dir.mkdir()
     auth_file = codex_dir / 'auth.json'
     auth_file.write_text(json.dumps({'tokens': {'access_token': 'codex-test-token-abc123', 'refresh_token': 'codex-refresh-xyz'}}))
-    monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._read_codex_access_token', lambda: 'codex-test-token-abc123')
+    monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._read_codex_access_token', lambda: 'codex-test-token-abc123')
     return codex_dir
 
 class TestAuxiliaryMaxTokensParam:
 
     def test_uses_max_completion_tokens_for_github_copilot_custom_base(self):
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.githubcopilot.com', 'key', None)), patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.githubcopilot.com', 'key', None)), patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None):
             assert auxiliary_max_tokens_param(2048) == {'max_completion_tokens': 2048}
 
     def test_uses_max_completion_tokens_for_github_copilot_custom_base_path(self):
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.githubcopilot.com/chat/completions', 'key', None)), patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.githubcopilot.com/chat/completions', 'key', None)), patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None):
             assert auxiliary_max_tokens_param(2048) == {'max_completion_tokens': 2048}
 
 class TestNormalizeAuxProvider:
@@ -61,7 +61,7 @@ class TestReadCodexAccessToken:
         hermes_home.mkdir(parents=True, exist_ok=True)
         monkeypatch.setenv('HERMES_HOME', str(hermes_home))
         valid_jwt = 'eyJhbGciOiJSUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.sig'
-        with patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(True, None)), patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth._read_codex_tokens', return_value={'tokens': {'access_token': valid_jwt, 'refresh_token': 'refresh'}}):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(True, None)), patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth._read_codex_tokens', return_value={'tokens': {'access_token': valid_jwt, 'refresh_token': 'refresh'}}):
             result = _read_codex_access_token()
         assert result == valid_jwt
 
@@ -70,7 +70,7 @@ class TestReadCodexAccessToken:
         hermes_home.mkdir(parents=True, exist_ok=True)
         (hermes_home / 'auth.json').write_text(json.dumps({'version': 1, 'providers': {}}))
         monkeypatch.setenv('HERMES_HOME', str(hermes_home))
-        with patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             result = _read_codex_access_token()
         assert result is None
 
@@ -86,7 +86,7 @@ class TestReadCodexAccessToken:
         codex_dir = tmp_path / '.codex'
         codex_dir.mkdir()
         (codex_dir / 'auth.json').write_text('{bad json')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.Path.home', return_value=tmp_path):
+        with patch('kylinmemory._vendor.agent.auxiliary_client.Path.home', return_value=tmp_path):
             result = _read_codex_access_token()
         assert result is None
 
@@ -94,7 +94,7 @@ class TestReadCodexAccessToken:
         codex_dir = tmp_path / '.codex'
         codex_dir.mkdir()
         (codex_dir / 'auth.json').write_text(json.dumps({'other': 'data'}))
-        with patch('kylin_memory._vendor.agent.auxiliary_client.Path.home', return_value=tmp_path):
+        with patch('kylinmemory._vendor.agent.auxiliary_client.Path.home', return_value=tmp_path):
             result = _read_codex_access_token()
         assert result is None
 
@@ -110,7 +110,7 @@ class TestReadCodexAccessToken:
         hermes_home.mkdir(parents=True, exist_ok=True)
         (hermes_home / 'auth.json').write_text(json.dumps({'version': 1, 'providers': {'openai-codex': {'tokens': {'access_token': expired_jwt, 'refresh_token': 'r'}}}}))
         monkeypatch.setenv('HERMES_HOME', str(hermes_home))
-        with patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             result = _read_codex_access_token()
         assert result is None, 'Expired JWT should return None'
 
@@ -147,8 +147,8 @@ class TestResolveXaiOAuthForAux:
         should not fall through to "no auxiliary provider configured" just
         because the singleton auth-store entry is absent.
         """
-        from kylin_memory._vendor.agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
-        from kylin_memory._vendor.kylin_agent_runtime_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
+        from kylinmemory._vendor.agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
+        from kylinmemory._vendor.kylin_agent_runtime_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
         hermes_home = tmp_path / 'hermes'
         hermes_home.mkdir(parents=True, exist_ok=True)
         (hermes_home / 'auth.json').write_text(json.dumps({'version': 1, 'providers': {}}))
@@ -160,8 +160,8 @@ class TestResolveXaiOAuthForAux:
         assert _resolve_xai_oauth_for_aux() == ('pool-access-token', DEFAULT_XAI_OAUTH_BASE_URL)
 
     def test_pool_backed_credentials_honor_base_url_env_override(self, tmp_path, monkeypatch):
-        from kylin_memory._vendor.agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
-        from kylin_memory._vendor.kylin_agent_runtime_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
+        from kylinmemory._vendor.agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
+        from kylinmemory._vendor.kylin_agent_runtime_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
         hermes_home = tmp_path / 'hermes'
         hermes_home.mkdir(parents=True, exist_ok=True)
         (hermes_home / 'auth.json').write_text(json.dumps({'version': 1, 'providers': {}}))
@@ -177,9 +177,9 @@ class TestAnthropicOAuthFlag:
     def test_oauth_token_sets_flag(self, monkeypatch):
         """OAuth tokens (sk-ant-oat01-*) should create client with is_oauth=True."""
         monkeypatch.setenv('ANTHROPIC_TOKEN', 'sk-ant-oat01-test-token')
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build:
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build:
             mock_build.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
+            from kylinmemory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
             client, model = _try_anthropic()
             assert client is not None
             assert isinstance(client, AnthropicAuxiliaryClient)
@@ -188,9 +188,9 @@ class TestAnthropicOAuthFlag:
 
     def test_api_key_no_oauth_flag(self, monkeypatch):
         """Regular API keys (sk-ant-api-*) should create client with is_oauth=False."""
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='sk-ant-api03-testkey1234'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='sk-ant-api03-testkey1234'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             mock_build.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
+            from kylinmemory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
             client, model = _try_anthropic()
             assert client is not None
             assert isinstance(client, AnthropicAuxiliaryClient)
@@ -210,8 +210,8 @@ class TestAnthropicOAuthFlag:
 
             def select(self):
                 return _Entry()
-        with patch('kylin_memory._vendor.agent.auxiliary_client.load_pool', return_value=_Pool()), patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', side_effect=AssertionError('legacy path should not run')), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=MagicMock()) as mock_build:
-            from kylin_memory._vendor.agent.auxiliary_client import _try_anthropic
+        with patch('kylinmemory._vendor.agent.auxiliary_client.load_pool', return_value=_Pool()), patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', side_effect=AssertionError('legacy path should not run')), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=MagicMock()) as mock_build:
+            from kylinmemory._vendor.agent.auxiliary_client import _try_anthropic
             client, model = _try_anthropic()
         assert client is not None
         assert model == 'claude-haiku-4-5-20251001'
@@ -220,9 +220,9 @@ class TestAnthropicOAuthFlag:
 class TestBuildCodexClient:
 
     def test_pool_without_selected_entry_falls_back_to_auth_store(self):
-        with patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(True, None)), patch('kylin_memory._vendor.agent.auxiliary_client._read_codex_access_token', return_value='codex-auth-token'), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(True, None)), patch('kylinmemory._vendor.agent.auxiliary_client._read_codex_access_token', return_value='codex-auth-token'), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             mock_openai.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _build_codex_client
+            from kylinmemory._vendor.agent.auxiliary_client import _build_codex_client
             client, model = _build_codex_client('gpt-5.4')
         assert client is not None
         assert model == 'gpt-5.4'
@@ -231,13 +231,13 @@ class TestBuildCodexClient:
 
     def test_rejects_missing_model(self):
         """Callers must pass an explicit model; no hardcoded default."""
-        from kylin_memory._vendor.agent.auxiliary_client import _build_codex_client
+        from kylinmemory._vendor.agent.auxiliary_client import _build_codex_client
         client, model = _build_codex_client('')
         assert client is None
         assert model is None
 
     def test_cached_codex_client_rebuilds_when_pool_entry_changes(self):
-        import kylin_memory._vendor.agent.auxiliary_client as aux
+        import kylinmemory._vendor.agent.auxiliary_client as aux
 
         class _Entry:
 
@@ -265,7 +265,7 @@ class TestBuildCodexClient:
         pool = _Pool()
         client_a = MagicMock(name='codex-client-a')
         client_b = MagicMock(name='codex-client-b')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.load_pool', return_value=pool), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI', side_effect=[client_a, client_b]) as mock_openai:
+        with patch('kylinmemory._vendor.agent.auxiliary_client.load_pool', return_value=pool), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI', side_effect=[client_a, client_b]) as mock_openai:
             aux.shutdown_cached_clients()
             try:
                 first_client, first_model = aux._get_cached_client('openai-codex', 'gpt-5.4')
@@ -294,9 +294,9 @@ class TestExpiredCodexFallback:
         (hermes_home / 'auth.json').write_text(json.dumps({'version': 1, 'providers': {'openai-codex': {'tokens': {'access_token': expired_jwt, 'refresh_token': 'r'}}}}))
         monkeypatch.setenv('HERMES_HOME', str(hermes_home))
         monkeypatch.setenv('ANTHROPIC_TOKEN', 'sk-ant-oat01-test-fallback')
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build:
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build:
             mock_build.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto, AnthropicAuxiliaryClient
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto, AnthropicAuxiliaryClient
             client, model = _resolve_auto()
             assert not isinstance(client, type(None)), 'Should find a provider after expired Codex'
 
@@ -313,9 +313,9 @@ class TestExpiredCodexFallback:
         (hermes_home / 'auth.json').write_text(json.dumps({'version': 1, 'providers': {'openai-codex': {'tokens': {'access_token': expired_jwt, 'refresh_token': 'r'}}}}))
         monkeypatch.setenv('HERMES_HOME', str(hermes_home))
         monkeypatch.setenv('OPENROUTER_API_KEY', 'or-test-key')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             mock_openai.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+            from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
             client, model = _resolve_auto()
             assert client is not None
             mock_openai.assert_called()
@@ -332,18 +332,18 @@ class TestExpiredCodexFallback:
         hermes_home.mkdir(parents=True, exist_ok=True)
         (hermes_home / 'auth.json').write_text(json.dumps({'version': 1, 'providers': {'openai-codex': {'tokens': {'access_token': expired_jwt, 'refresh_token': 'r'}}}}))
         monkeypatch.setenv('HERMES_HOME', str(hermes_home))
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('http://localhost:11434/v1', 'sk-dummy')):
-            with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('http://localhost:11434/v1', 'sk-dummy')):
+            with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
                 mock_openai.return_value = MagicMock()
-                from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto
+                from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto
                 client, model = _resolve_auto()
                 assert client is not None
 
     def test_hermes_oauth_file_sets_oauth_flag(self, monkeypatch):
         """OAuth-style tokens should get is_oauth=*** (token is not sk-ant-api-*)."""
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='sk-ant-oat-hermes-token'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='sk-ant-oat-hermes-token'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             mock_build.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
+            from kylinmemory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
             client, model = _try_anthropic()
             assert client is not None, 'Should resolve token'
             adapter = client.chat.completions
@@ -380,9 +380,9 @@ class TestExpiredCodexFallback:
         """CLAUDE_CODE_OAUTH_TOKEN env var should get is_oauth=True."""
         monkeypatch.setenv('CLAUDE_CODE_OAUTH_TOKEN', 'sk-ant-oat-cc-test-token')
         monkeypatch.delenv('ANTHROPIC_TOKEN', raising=False)
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build:
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build:
             mock_build.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
+            from kylinmemory._vendor.agent.auxiliary_client import _try_anthropic, AnthropicAuxiliaryClient
             client, model = _try_anthropic()
             assert client is not None
             adapter = client.chat.completions
@@ -393,7 +393,7 @@ class TestExplicitProviderRouting:
 
     def test_explicit_anthropic_api_key(self, monkeypatch):
         """provider='anthropic' + regular API key should work with is_oauth=False."""
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='sk-ant-api-regular-key'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='sk-ant-api-regular-key'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             mock_build.return_value = MagicMock()
             client, model = resolve_provider_client('anthropic')
             assert client is not None
@@ -402,8 +402,8 @@ class TestExplicitProviderRouting:
 
     def test_explicit_openrouter_pool_exhausted_logs_precise_warning(self, monkeypatch, caplog):
         monkeypatch.delenv('OPENROUTER_API_KEY', raising=False)
-        with patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(True, None)):
-            with caplog.at_level(logging.WARNING, logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(True, None)):
+            with caplog.at_level(logging.WARNING, logger='kylinmemory._vendor.agent.auxiliary_client'):
                 client, model = resolve_provider_client('openrouter')
         assert client is None
         assert model is None
@@ -412,8 +412,8 @@ class TestExplicitProviderRouting:
 
     def test_explicit_openrouter_missing_env_keeps_not_set_warning(self, monkeypatch, caplog):
         monkeypatch.delenv('OPENROUTER_API_KEY', raising=False)
-        with patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
-            with caplog.at_level(logging.WARNING, logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+            with caplog.at_level(logging.WARNING, logger='kylinmemory._vendor.agent.auxiliary_client'):
                 client, model = resolve_provider_client('openrouter')
         assert client is None
         assert model is None
@@ -435,10 +435,10 @@ class TestGetTextAuxiliaryClient:
 
             def select(self):
                 return _Entry()
-        with patch('kylin_memory._vendor.agent.auxiliary_client.load_pool', return_value=_Pool()), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI'), patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth._read_codex_tokens', side_effect=AssertionError('legacy codex store should not run')):
-            from kylin_memory._vendor.agent.auxiliary_client import _build_codex_client
+        with patch('kylinmemory._vendor.agent.auxiliary_client.load_pool', return_value=_Pool()), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI'), patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth._read_codex_tokens', side_effect=AssertionError('legacy codex store should not run')):
+            from kylinmemory._vendor.agent.auxiliary_client import _build_codex_client
             client, model = _build_codex_client('gpt-5.4')
-        from kylin_memory._vendor.agent.auxiliary_client import CodexAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import CodexAuxiliaryClient
         assert isinstance(client, CodexAuxiliaryClient)
         assert model == 'gpt-5.4'
 
@@ -446,15 +446,15 @@ class TestGetTextAuxiliaryClient:
         monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
         monkeypatch.delenv('OPENAI_API_KEY', raising=False)
         monkeypatch.delenv('OPENROUTER_API_KEY', raising=False)
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylin_memory._vendor.agent.auxiliary_client._read_codex_access_token', return_value=None), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylinmemory._vendor.agent.auxiliary_client._read_codex_access_token', return_value=None), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
             client, model = get_text_auxiliary_client()
         assert client is None
         assert model is None
 
     def test_custom_endpoint_uses_codex_wrapper_when_runtime_requests_responses_api(self):
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.openai.com/v1', 'sk-test', 'codex_responses')), patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=None), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='gpt-5.3-codex'), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('https://api.openai.com/v1', 'sk-test', 'codex_responses')), patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=None), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='gpt-5.3-codex'), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             client, model = get_text_auxiliary_client()
-        from kylin_memory._vendor.agent.auxiliary_client import CodexAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import CodexAuxiliaryClient
         assert isinstance(client, CodexAuxiliaryClient)
         assert model == 'gpt-5.3-codex'
         assert mock_openai.call_args.kwargs['base_url'] == 'https://api.openai.com/v1'
@@ -466,13 +466,13 @@ class TestVisionClientFallback:
     def test_vision_auto_includes_active_provider_when_configured(self, monkeypatch):
         """Active provider appears in available backends when credentials exist."""
         monkeypatch.setenv('ANTHROPIC_API_KEY', '***')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='anthropic'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-sonnet-4'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=MagicMock()), patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='***'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='anthropic'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='claude-sonnet-4'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=MagicMock()), patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='***'):
             backends = get_available_vision_backends()
         assert 'anthropic' in backends
 
     def test_resolve_provider_client_returns_native_anthropic_wrapper(self, monkeypatch):
         monkeypatch.setenv('ANTHROPIC_API_KEY', '***')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=MagicMock()), patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='***'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=MagicMock()), patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='***'):
             client, model = resolve_provider_client('anthropic')
         assert client is not None
         assert client.__class__.__name__ == 'AnthropicAuxiliaryClient'
@@ -494,8 +494,8 @@ class TestAuxiliaryPoolAwareness:
 
             def select(self):
                 return _Entry()
-        with patch('kylin_memory._vendor.agent.auxiliary_client.load_pool', return_value=_Pool()), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, patch('kylin_memory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', return_value=None):
-            from kylin_memory._vendor.agent.auxiliary_client import _try_nous
+        with patch('kylinmemory._vendor.agent.auxiliary_client.load_pool', return_value=_Pool()), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, patch('kylinmemory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', return_value=None):
+            from kylinmemory._vendor.agent.auxiliary_client import _try_nous
             client, model = _try_nous()
         assert client is not None
         assert model == 'google/gemini-3-flash-preview'
@@ -505,8 +505,8 @@ class TestAuxiliaryPoolAwareness:
     def test_try_nous_uses_portal_recommendation_for_text(self):
         """When the Portal recommends a compaction model, _try_nous honors it."""
         fresh_base = 'https://inference-api.nousresearch.com/v1'
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value={'access_token': '***'}), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', fresh_base)), patch('kylin_memory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', return_value='minimax/minimax-m2.7') as mock_rec, patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
-            from kylin_memory._vendor.agent.auxiliary_client import _try_nous
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value={'access_token': '***'}), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', fresh_base)), patch('kylinmemory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', return_value='minimax/minimax-m2.7') as mock_rec, patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+            from kylinmemory._vendor.agent.auxiliary_client import _try_nous
             mock_openai.return_value = MagicMock()
             client, model = _try_nous(vision=False)
         assert client is not None
@@ -516,8 +516,8 @@ class TestAuxiliaryPoolAwareness:
     def test_try_nous_uses_portal_recommendation_for_vision(self):
         """Vision tasks should ask for the vision-specific recommendation."""
         fresh_base = 'https://inference-api.nousresearch.com/v1'
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value={'access_token': '***'}), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', fresh_base)), patch('kylin_memory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', return_value='google/gemini-3-flash-preview') as mock_rec, patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI'):
-            from kylin_memory._vendor.agent.auxiliary_client import _try_nous
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value={'access_token': '***'}), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', fresh_base)), patch('kylinmemory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', return_value='google/gemini-3-flash-preview') as mock_rec, patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI'):
+            from kylinmemory._vendor.agent.auxiliary_client import _try_nous
             client, model = _try_nous(vision=True)
         assert client is not None
         assert model == 'google/gemini-3-flash-preview'
@@ -526,8 +526,8 @@ class TestAuxiliaryPoolAwareness:
     def test_try_nous_falls_back_when_recommendation_lookup_raises(self):
         """If the Portal lookup throws, we must still return a usable model."""
         fresh_base = 'https://inference-api.nousresearch.com/v1'
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value={'access_token': '***'}), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', fresh_base)), patch('kylin_memory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', side_effect=RuntimeError('portal down')), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI'):
-            from kylin_memory._vendor.agent.auxiliary_client import _try_nous
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value={'access_token': '***'}), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', fresh_base)), patch('kylinmemory._vendor.kylin_agent_runtime_cli.models.get_nous_recommended_aux_model', side_effect=RuntimeError('portal down')), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI'):
+            from kylinmemory._vendor.agent.auxiliary_client import _try_nous
             client, model = _try_nous()
         assert client is not None
         assert model == 'google/gemini-3-flash-preview'
@@ -542,7 +542,7 @@ class TestAuxiliaryPoolAwareness:
         fresh_client = MagicMock()
         fresh_client.base_url = 'https://inference-api.nousresearch.com/v1'
         fresh_client.chat.completions.create.return_value = {'ok': True}
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('nous', 'nous-model', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(stale_client, 'nous-model')), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI', return_value=fresh_client), patch('kylin_memory._vendor.agent.auxiliary_client._validate_llm_response', side_effect=lambda resp, _task: resp), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', 'https://inference-api.nousresearch.com/v1')):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('nous', 'nous-model', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(stale_client, 'nous-model')), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI', return_value=fresh_client), patch('kylinmemory._vendor.agent.auxiliary_client._validate_llm_response', side_effect=lambda resp, _task: resp), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', 'https://inference-api.nousresearch.com/v1')):
             result = call_llm(task='compression', messages=[{'role': 'user', 'content': 'hi'}])
         assert result == {'ok': True}
         assert stale_client.chat.completions.create.call_count == 1
@@ -559,16 +559,16 @@ class TestAuxiliaryPoolAwareness:
         fresh_async_client = MagicMock()
         fresh_async_client.base_url = 'https://inference-api.nousresearch.com/v1'
         fresh_async_client.chat.completions.create = AsyncMock(return_value={'ok': True})
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('nous', 'nous-model', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(stale_client, 'nous-model')), patch('kylin_memory._vendor.agent.auxiliary_client._to_async_client', return_value=(fresh_async_client, 'nous-model')), patch('kylin_memory._vendor.agent.auxiliary_client._validate_llm_response', side_effect=lambda resp, _task: resp), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', 'https://inference-api.nousresearch.com/v1')):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('nous', 'nous-model', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(stale_client, 'nous-model')), patch('kylinmemory._vendor.agent.auxiliary_client._to_async_client', return_value=(fresh_async_client, 'nous-model')), patch('kylinmemory._vendor.agent.auxiliary_client._validate_llm_response', side_effect=lambda resp, _task: resp), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_nous_runtime_api', return_value=('fresh-agent-key', 'https://inference-api.nousresearch.com/v1')):
             result = await async_call_llm(task='title_generation', messages=[{'role': 'user', 'content': 'hi'}])
         assert result == {'ok': True}
         assert stale_client.chat.completions.create.await_count == 1
         assert fresh_async_client.chat.completions.create.await_count == 1
 
     def test_cached_gmi_client_keeps_explicit_slash_model_override(self):
-        import kylin_memory._vendor.agent.auxiliary_client as aux
+        import kylinmemory._vendor.agent.auxiliary_client as aux
         fake_client = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(fake_client, 'google/gemini-3.1-flash-lite-preview')) as mock_resolve:
+        with patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(fake_client, 'google/gemini-3.1-flash-lite-preview')) as mock_resolve:
             aux.shutdown_cached_clients()
             try:
                 client, model = aux._get_cached_client('gmi', 'google/gemini-3.1-flash-lite-preview', base_url='https://api.gmi-serving.com/v1', api_key='gmi-key')
@@ -725,7 +725,7 @@ class TestGetProviderChain:
     def test_picks_up_patched_functions(self):
         """Patches on _try_* functions must be visible in the chain."""
         sentinel = lambda: ('patched', 'model')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter', sentinel):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter', sentinel):
             chain = _get_provider_chain()
         assert chain[0] == ('openrouter', sentinel)
 
@@ -734,14 +734,14 @@ class TestTryPaymentFallback:
 
     def test_skips_failed_provider(self):
         mock_client = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_nous', return_value=(mock_client, 'nous-model')), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_nous', return_value=(mock_client, 'nous-model')), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'):
             client, model, label = _try_payment_fallback('openrouter', task='compression')
         assert client is mock_client
         assert model == 'nous-model'
         assert label == 'nous'
 
     def test_returns_none_when_no_fallback(self):
-        with patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_nous', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_nous', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'):
             client, model, label = _try_payment_fallback('openrouter')
         assert client is None
         assert label == ''
@@ -749,7 +749,7 @@ class TestTryPaymentFallback:
     def test_codex_alias_maps_to_chain_label(self):
         """'codex' should map to 'openai-codex' in the skip set."""
         mock_client = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter', return_value=(mock_client, 'or-model')), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openai-codex'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter', return_value=(mock_client, 'or-model')), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openai-codex'):
             client, model, label = _try_payment_fallback('openai-codex', task='vision')
         assert client is mock_client
         assert label == 'openrouter'
@@ -760,7 +760,7 @@ class TestTryPaymentFallback:
         When OR/Nous/custom/api-key all fail, payment-fallback returns None —
         Codex is never tried with a guessed model.
         """
-        with patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_nous', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_nous', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'):
             client, model, label = _try_payment_fallback('openrouter')
         assert client is None
         assert model is None
@@ -786,7 +786,7 @@ class TestCallLlmPaymentFallback:
         server_err = Exception('Internal Server Error')
         server_err.status_code = 500
         primary_client.chat.completions.create.side_effect = server_err
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'google/gemini-3-flash-preview')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'google/gemini-3-flash-preview', None, None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'google/gemini-3-flash-preview')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'google/gemini-3-flash-preview', None, None, None)):
             with pytest.raises(Exception, match='Internal Server Error'):
                 call_llm(task='compression', messages=[{'role': 'user', 'content': 'hello'}])
 
@@ -798,7 +798,7 @@ class TestCallLlmPaymentFallback:
         primary_client.chat.completions.create.side_effect = rate_err
         fallback_client = MagicMock()
         fallback_client.chat.completions.create.return_value = MagicMock(choices=[MagicMock(message=MagicMock(content='fallback response'))])
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'xiaomi/mimo-v2-pro')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'xiaomi/mimo-v2-pro', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(fallback_client, 'fallback-model', 'openrouter')):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'xiaomi/mimo-v2-pro')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'xiaomi/mimo-v2-pro', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(fallback_client, 'fallback-model', 'openrouter')):
             result = call_llm(task='title_generation', messages=[{'role': 'user', 'content': 'hello'}])
         assert fallback_client.chat.completions.create.called
 
@@ -818,7 +818,7 @@ class TestAuxiliaryFallbackLayering:
         chain_client = MagicMock()
         chain_client.chat.completions.create.return_value = MagicMock(choices=[MagicMock(message=MagicMock(content='from configured chain'))])
         main_called = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'glm-4v-flash')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('glm', 'glm-4v-flash', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_configured_fallback_chain', return_value=(chain_client, 'gpt-4o-mini', 'fallback_chain[0](openai)')), patch('kylin_memory._vendor.agent.auxiliary_client._try_main_agent_model_fallback', side_effect=main_called):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'glm-4v-flash')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('glm', 'glm-4v-flash', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_configured_fallback_chain', return_value=(chain_client, 'gpt-4o-mini', 'fallback_chain[0](openai)')), patch('kylinmemory._vendor.agent.auxiliary_client._try_main_agent_model_fallback', side_effect=main_called):
             result = call_llm(task='vision', messages=[{'role': 'user', 'content': 'hello'}])
         assert chain_client.chat.completions.create.called
         main_called.assert_not_called()
@@ -830,7 +830,7 @@ class TestAuxiliaryFallbackLayering:
         primary_client.chat.completions.create.side_effect = self._make_payment_err()
         main_client = MagicMock()
         main_client.chat.completions.create.return_value = MagicMock(choices=[MagicMock(message=MagicMock(content='from main agent'))])
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'glm-4v-flash')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('glm', 'glm-4v-flash', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_configured_fallback_chain', return_value=(None, None, '')), patch('kylin_memory._vendor.agent.auxiliary_client._try_main_agent_model_fallback', return_value=(main_client, 'claude-sonnet-4', 'main-agent(openrouter)')):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'glm-4v-flash')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('glm', 'glm-4v-flash', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_configured_fallback_chain', return_value=(None, None, '')), patch('kylinmemory._vendor.agent.auxiliary_client._try_main_agent_model_fallback', return_value=(main_client, 'claude-sonnet-4', 'main-agent(openrouter)')):
             result = call_llm(task='vision', messages=[{'role': 'user', 'content': 'hello'}])
         assert main_client.chat.completions.create.called
 
@@ -839,7 +839,7 @@ class TestAuxiliaryFallbackLayering:
         monkeypatch.setenv('OPENROUTER_API_KEY', 'or-key')
         primary_client = MagicMock()
         primary_client.chat.completions.create.side_effect = self._make_payment_err()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'glm-4v-flash')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('glm', 'glm-4v-flash', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_configured_fallback_chain', return_value=(None, None, '')), patch('kylin_memory._vendor.agent.auxiliary_client._try_main_agent_model_fallback', return_value=(None, None, '')), caplog.at_level('WARNING', logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'glm-4v-flash')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('glm', 'glm-4v-flash', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_configured_fallback_chain', return_value=(None, None, '')), patch('kylinmemory._vendor.agent.auxiliary_client._try_main_agent_model_fallback', return_value=(None, None, '')), caplog.at_level('WARNING', logger='kylinmemory._vendor.agent.auxiliary_client'):
             with pytest.raises(Exception, match='Payment Required'):
                 call_llm(task='vision', messages=[{'role': 'user', 'content': 'hello'}])
         assert any(('all fallbacks exhausted' in r.message for r in caplog.records)), f'Expected exhaustion warning, got: {[r.message for r in caplog.records]}'
@@ -848,47 +848,47 @@ class TestTryMainAgentModelFallback:
     """_try_main_agent_model_fallback resolves the user's main provider+model as a safety net."""
 
     def test_returns_none_when_main_provider_is_auto(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='auto'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='some-model'):
+        from kylinmemory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='auto'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='some-model'):
             client, model, label = _try_main_agent_model_fallback('glm', task='vision')
         assert client is None and model is None and (label == '')
 
     def test_returns_none_when_failed_provider_equals_main(self):
         """If the thing that failed IS the main model, no point retrying it."""
-        from kylin_memory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4'):
+        from kylinmemory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4'):
             client, model, label = _try_main_agent_model_fallback('openrouter', task='vision')
         assert client is None and label == ''
 
     def test_resolves_main_provider_client(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
+        from kylinmemory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
         fake_client = MagicMock()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4'), patch('kylin_memory._vendor.agent.auxiliary_client._is_provider_unhealthy', return_value=False), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(fake_client, 'anthropic/claude-sonnet-4')):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4'), patch('kylinmemory._vendor.agent.auxiliary_client._is_provider_unhealthy', return_value=False), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(fake_client, 'anthropic/claude-sonnet-4')):
             client, model, label = _try_main_agent_model_fallback('glm', task='vision')
         assert client is fake_client
         assert model == 'anthropic/claude-sonnet-4'
         assert label == 'main-agent(openrouter)'
 
     def test_skips_when_main_provider_is_unhealthy(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4'), patch('kylin_memory._vendor.agent.auxiliary_client._is_provider_unhealthy', return_value=True):
+        from kylinmemory._vendor.agent.auxiliary_client import _try_main_agent_model_fallback
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4'), patch('kylinmemory._vendor.agent.auxiliary_client._is_provider_unhealthy', return_value=True):
             client, model, label = _try_main_agent_model_fallback('glm', task='vision')
         assert client is None
 
 def test_resolve_api_key_provider_skips_unconfigured_anthropic(monkeypatch):
     """_resolve_api_key_provider must not try anthropic when user never configured it."""
     from collections import OrderedDict
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import ProviderConfig
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import ProviderConfig
     fake_registry = OrderedDict({'anthropic': ProviderConfig(id='anthropic', name='Anthropic', auth_type='api_key', inference_base_url='https://api.anthropic.com', api_key_env_vars=('ANTHROPIC_API_KEY',))})
     called = []
 
     def mock_try_anthropic():
         called.append('anthropic')
         return (None, None)
-    monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._try_anthropic', mock_try_anthropic)
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.auth.PROVIDER_REGISTRY', fake_registry)
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.auth.is_provider_explicitly_configured', lambda pid: False)
-    from kylin_memory._vendor.agent.auxiliary_client import _resolve_api_key_provider
+    monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._try_anthropic', mock_try_anthropic)
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.auth.PROVIDER_REGISTRY', fake_registry)
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.auth.is_provider_explicitly_configured', lambda pid: False)
+    from kylinmemory._vendor.agent.auxiliary_client import _resolve_api_key_provider
     _resolve_api_key_provider()
     assert 'anthropic' not in called, '_try_anthropic() should not be called when anthropic is not explicitly configured'
 
@@ -896,28 +896,28 @@ class TestIsConnectionError:
     """Tests for _is_connection_error detection."""
 
     def test_connection_refused(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_connection_error
+        from kylinmemory._vendor.agent.auxiliary_client import _is_connection_error
         err = Exception('Connection refused')
         assert _is_connection_error(err) is True
 
     def test_timeout(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_connection_error
+        from kylinmemory._vendor.agent.auxiliary_client import _is_connection_error
         err = Exception('Request timed out.')
         assert _is_connection_error(err) is True
 
     def test_dns_failure(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_connection_error
+        from kylinmemory._vendor.agent.auxiliary_client import _is_connection_error
         err = Exception('Name or service not known')
         assert _is_connection_error(err) is True
 
     def test_normal_api_error_not_connection(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_connection_error
+        from kylinmemory._vendor.agent.auxiliary_client import _is_connection_error
         err = Exception('Bad Request: invalid model')
         err.status_code = 400
         assert _is_connection_error(err) is False
 
     def test_500_not_connection(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_connection_error
+        from kylinmemory._vendor.agent.auxiliary_client import _is_connection_error
         err = Exception('Internal Server Error')
         err.status_code = 500
         assert _is_connection_error(err) is False
@@ -933,13 +933,13 @@ class TestKimiTemperatureOmitted:
     @pytest.mark.parametrize('model', ['kimi-for-coding', 'kimi-k2.5', 'kimi-k2.6', 'kimi-k2-turbo-preview', 'kimi-k2-0905-preview', 'kimi-k2-thinking', 'kimi-k2-thinking-turbo', 'kimi-k2-instruct', 'kimi-k2-instruct-0905', 'moonshotai/kimi-k2.5', 'moonshotai/Kimi-K2-Thinking', 'moonshotai/Kimi-K2-Instruct'])
     def test_kimi_models_omit_temperature(self, model):
         """No kimi model should have a temperature key in kwargs."""
-        from kylin_memory._vendor.agent.auxiliary_client import _build_call_kwargs
+        from kylinmemory._vendor.agent.auxiliary_client import _build_call_kwargs
         kwargs = _build_call_kwargs(provider='kimi-coding', model=model, messages=[{'role': 'user', 'content': 'hello'}], temperature=0.3)
         assert 'temperature' not in kwargs
 
     def test_kimi_for_coding_no_temperature_when_none(self):
         """When caller passes temperature=None, still no temperature key."""
-        from kylin_memory._vendor.agent.auxiliary_client import _build_call_kwargs
+        from kylinmemory._vendor.agent.auxiliary_client import _build_call_kwargs
         kwargs = _build_call_kwargs(provider='kimi-coding', model='kimi-for-coding', messages=[{'role': 'user', 'content': 'hello'}], temperature=None)
         assert 'temperature' not in kwargs
 
@@ -948,7 +948,7 @@ class TestKimiTemperatureOmitted:
         client.base_url = 'https://api.kimi.com/coding/v1'
         response = MagicMock()
         client.chat.completions.create.return_value = response
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'kimi-for-coding')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'kimi-for-coding', None, None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'kimi-for-coding')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'kimi-for-coding', None, None, None)):
             result = call_llm(task='title_generation', messages=[{'role': 'user', 'content': 'hello'}], temperature=0.1)
         assert result is response
         kwargs = client.chat.completions.create.call_args.kwargs
@@ -961,7 +961,7 @@ class TestKimiTemperatureOmitted:
         client.base_url = 'https://api.kimi.com/coding/v1'
         response = MagicMock()
         client.chat.completions.create = AsyncMock(return_value=response)
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'kimi-for-coding')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'kimi-for-coding', None, None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'kimi-for-coding')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'kimi-for-coding', None, None, None)):
             result = await async_call_llm(task='title_generation', messages=[{'role': 'user', 'content': 'hello'}], temperature=0.1)
         assert result is response
         kwargs = client.chat.completions.create.call_args.kwargs
@@ -970,14 +970,14 @@ class TestKimiTemperatureOmitted:
 
     @pytest.mark.parametrize('model', ['anthropic/claude-sonnet-4-6', 'gpt-5.4', 'deepseek-chat'])
     def test_non_kimi_models_preserve_temperature(self, model):
-        from kylin_memory._vendor.agent.auxiliary_client import _build_call_kwargs
+        from kylinmemory._vendor.agent.auxiliary_client import _build_call_kwargs
         kwargs = _build_call_kwargs(provider='openrouter', model=model, messages=[{'role': 'user', 'content': 'hello'}], temperature=0.3)
         assert kwargs['temperature'] == 0.3
 
     @pytest.mark.parametrize('base_url', ['https://api.moonshot.ai/v1', 'https://api.moonshot.cn/v1', 'https://api.kimi.com/coding/v1'])
     def test_kimi_k2_5_omits_temperature_regardless_of_endpoint(self, base_url):
         """Temperature is omitted regardless of which Kimi endpoint is used."""
-        from kylin_memory._vendor.agent.auxiliary_client import _build_call_kwargs
+        from kylinmemory._vendor.agent.auxiliary_client import _build_call_kwargs
         kwargs = _build_call_kwargs(provider='kimi-coding', model='kimi-k2.5', messages=[{'role': 'user', 'content': 'hello'}], temperature=0.1, base_url=base_url)
         assert 'temperature' not in kwargs
 
@@ -986,11 +986,11 @@ class TestStaleBaseUrlWarning:
 
     def test_warns_when_openai_base_url_set_with_named_provider(self, monkeypatch, caplog):
         """Warning fires when OPENAI_BASE_URL is set but provider is a named provider."""
-        import kylin_memory._vendor.agent.auxiliary_client as mod
+        import kylinmemory._vendor.agent.auxiliary_client as mod
         monkeypatch.setattr(mod, '_stale_base_url_warned', False)
         monkeypatch.setenv('OPENAI_BASE_URL', 'http://localhost:11434/v1')
         monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-or-test')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='google/gemini-flash'), caplog.at_level(logging.WARNING, logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='google/gemini-flash'), caplog.at_level(logging.WARNING, logger='kylinmemory._vendor.agent.auxiliary_client'):
             _resolve_auto()
         assert any(('OPENAI_BASE_URL is set' in rec.message for rec in caplog.records)), 'Expected a warning about stale OPENAI_BASE_URL'
         assert mod._stale_base_url_warned is True
@@ -1003,7 +1003,7 @@ class TestAuxiliaryTaskExtraBody:
         response = MagicMock()
         client.chat.completions.create.return_value = response
         config = {'auxiliary': {'title_generation': {'extra_body': {'enable_thinking': False, 'reasoning': {'effort': 'none'}}}}}
-        with patch('kylin_memory._vendor.kylin_agent_runtime_cli.config.load_config', return_value=config), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'glm-4.5-air')):
+        with patch('kylinmemory._vendor.kylin_agent_runtime_cli.config.load_config', return_value=config), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'glm-4.5-air')):
             result = call_llm(task='title_generation', messages=[{'role': 'user', 'content': 'hello'}], extra_body={'metadata': {'source': 'test'}})
         assert result is response
         kwargs = client.chat.completions.create.call_args.kwargs
@@ -1018,7 +1018,7 @@ class TestAuxiliaryTaskExtraBody:
         response = MagicMock()
         client.chat.completions.create = AsyncMock(return_value=response)
         config = {'auxiliary': {'title_generation': {'extra_body': {'enable_thinking': False}}}}
-        with patch('kylin_memory._vendor.kylin_agent_runtime_cli.config.load_config', return_value=config), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'glm-4.5-air')):
+        with patch('kylinmemory._vendor.kylin_agent_runtime_cli.config.load_config', return_value=config), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(client, 'glm-4.5-air')):
             result = await async_call_llm(task='title_generation', messages=[{'role': 'user', 'content': 'hello'}], extra_body={'enable_thinking': True})
         assert result is response
         kwargs = client.chat.completions.create.call_args.kwargs
@@ -1026,32 +1026,32 @@ class TestAuxiliaryTaskExtraBody:
 
     def test_no_warning_when_provider_is_custom(self, monkeypatch, caplog):
         """No warning when the provider is 'custom' — OPENAI_BASE_URL is expected."""
-        import kylin_memory._vendor.agent.auxiliary_client as mod
+        import kylinmemory._vendor.agent.auxiliary_client as mod
         monkeypatch.setattr(mod, '_stale_base_url_warned', False)
         monkeypatch.setenv('OPENAI_BASE_URL', 'http://localhost:11434/v1')
         monkeypatch.setenv('OPENAI_API_KEY', 'test-key')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='custom'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='llama3'), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('http://localhost:11434/v1', 'test-key', None)), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, caplog.at_level(logging.WARNING, logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='custom'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='llama3'), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_custom_runtime', return_value=('http://localhost:11434/v1', 'test-key', None)), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai, caplog.at_level(logging.WARNING, logger='kylinmemory._vendor.agent.auxiliary_client'):
             mock_openai.return_value = MagicMock()
             _resolve_auto()
         assert not any(('OPENAI_BASE_URL is set' in rec.message for rec in caplog.records)), "Should NOT warn when provider is 'custom'"
 
     def test_no_warning_when_provider_is_named_custom(self, monkeypatch, caplog):
         """No warning when the provider is 'custom:myname' — base_url comes from config."""
-        import kylin_memory._vendor.agent.auxiliary_client as mod
+        import kylinmemory._vendor.agent.auxiliary_client as mod
         monkeypatch.setattr(mod, '_stale_base_url_warned', False)
         monkeypatch.setenv('OPENAI_BASE_URL', 'http://localhost:11434/v1')
         monkeypatch.setenv('OPENAI_API_KEY', 'test-key')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='custom:ollama-local'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='llama3'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(MagicMock(), 'llama3')), caplog.at_level(logging.WARNING, logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='custom:ollama-local'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='llama3'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client', return_value=(MagicMock(), 'llama3')), caplog.at_level(logging.WARNING, logger='kylinmemory._vendor.agent.auxiliary_client'):
             _resolve_auto()
         assert not any(('OPENAI_BASE_URL is set' in rec.message for rec in caplog.records)), "Should NOT warn when provider is 'custom:*'"
 
     def test_no_warning_when_openai_base_url_not_set(self, monkeypatch, caplog):
         """No warning when OPENAI_BASE_URL is absent."""
-        import kylin_memory._vendor.agent.auxiliary_client as mod
+        import kylinmemory._vendor.agent.auxiliary_client as mod
         monkeypatch.setattr(mod, '_stale_base_url_warned', False)
         monkeypatch.delenv('OPENAI_BASE_URL', raising=False)
         monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-or-test')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='google/gemini-flash'), caplog.at_level(logging.WARNING, logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='google/gemini-flash'), caplog.at_level(logging.WARNING, logger='kylinmemory._vendor.agent.auxiliary_client'):
             _resolve_auto()
         assert not any(('OPENAI_BASE_URL is set' in rec.message for rec in caplog.records)), 'Should NOT warn when OPENAI_BASE_URL is not set'
 
@@ -1059,23 +1059,23 @@ class TestAnthropicCompatImageConversion:
     """Tests for _is_anthropic_compat_endpoint and _convert_openai_images_to_anthropic."""
 
     def test_known_providers_detected(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_anthropic_compat_endpoint
+        from kylinmemory._vendor.agent.auxiliary_client import _is_anthropic_compat_endpoint
         assert _is_anthropic_compat_endpoint('minimax', '')
         assert _is_anthropic_compat_endpoint('minimax-cn', '')
 
     def test_openrouter_not_detected(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_anthropic_compat_endpoint
+        from kylinmemory._vendor.agent.auxiliary_client import _is_anthropic_compat_endpoint
         assert not _is_anthropic_compat_endpoint('openrouter', '')
         assert not _is_anthropic_compat_endpoint('anthropic', '')
 
     def test_url_based_detection(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _is_anthropic_compat_endpoint
+        from kylinmemory._vendor.agent.auxiliary_client import _is_anthropic_compat_endpoint
         assert _is_anthropic_compat_endpoint('custom', 'https://api.minimax.io/anthropic')
         assert _is_anthropic_compat_endpoint('custom', 'https://example.com/anthropic/v1')
         assert not _is_anthropic_compat_endpoint('custom', 'https://api.openai.com/v1')
 
     def test_base64_image_converted(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
+        from kylinmemory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
         messages = [{'role': 'user', 'content': [{'type': 'text', 'text': 'describe'}, {'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,iVBOR='}}]}]
         result = _convert_openai_images_to_anthropic(messages)
         img_block = result[0]['content'][1]
@@ -1085,7 +1085,7 @@ class TestAnthropicCompatImageConversion:
         assert img_block['source']['data'] == 'iVBOR='
 
     def test_url_image_converted(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
+        from kylinmemory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
         messages = [{'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': 'https://example.com/img.jpg'}}]}]
         result = _convert_openai_images_to_anthropic(messages)
         img_block = result[0]['content'][0]
@@ -1094,13 +1094,13 @@ class TestAnthropicCompatImageConversion:
         assert img_block['source']['url'] == 'https://example.com/img.jpg'
 
     def test_text_only_messages_unchanged(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
+        from kylinmemory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
         messages = [{'role': 'user', 'content': 'Hello'}]
         result = _convert_openai_images_to_anthropic(messages)
         assert result[0] is messages[0]
 
     def test_jpeg_media_type_parsed(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
+        from kylinmemory._vendor.agent.auxiliary_client import _convert_openai_images_to_anthropic
         messages = [{'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,/9j/='}}]}]
         result = _convert_openai_images_to_anthropic(messages)
         assert result[0]['content'][0]['source']['media_type'] == 'image/jpeg'
@@ -1147,7 +1147,7 @@ class TestAuxiliaryAuthRefreshRetry:
         fresh_client = MagicMock()
         fresh_client.base_url = 'https://chatgpt.com/backend-api/codex'
         fresh_client.chat.completions.create.return_value = _DummyResponse('fresh-sync')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.resolve_vision_provider_client', side_effect=[('openai-codex', failing_client, 'gpt-5.4'), ('openai-codex', fresh_client, 'gpt-5.4')]), patch('kylin_memory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
+        with patch('kylinmemory._vendor.agent.auxiliary_client.resolve_vision_provider_client', side_effect=[('openai-codex', failing_client, 'gpt-5.4'), ('openai-codex', fresh_client, 'gpt-5.4')]), patch('kylinmemory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
             resp = call_llm(task='vision', provider='openai-codex', model='gpt-5.4', messages=[{'role': 'user', 'content': 'hi'}])
         assert resp.choices[0].message.content == 'fresh-sync'
         mock_refresh.assert_called_once_with('openai-codex')
@@ -1159,7 +1159,7 @@ class TestAuxiliaryAuthRefreshRetry:
         fresh_client = MagicMock()
         fresh_client.base_url = 'https://chatgpt.com/backend-api/codex'
         fresh_client.chat.completions.create.return_value = _DummyResponse('fresh-non-vision')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.4', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'gpt-5.4'), (fresh_client, 'gpt-5.4')]), patch('kylin_memory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.4', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'gpt-5.4'), (fresh_client, 'gpt-5.4')]), patch('kylinmemory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
             resp = call_llm(task='compression', provider='openai-codex', model='gpt-5.4', messages=[{'role': 'user', 'content': 'hi'}])
         assert resp.choices[0].message.content == 'fresh-non-vision'
         mock_refresh.assert_called_once_with('openai-codex')
@@ -1173,7 +1173,7 @@ class TestAuxiliaryAuthRefreshRetry:
         fresh_client = MagicMock()
         fresh_client.base_url = 'https://api.anthropic.com'
         fresh_client.chat.completions.create.return_value = _DummyResponse('fresh-anthropic')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('anthropic', 'claude-haiku-4-5-20251001', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'claude-haiku-4-5-20251001'), (fresh_client, 'claude-haiku-4-5-20251001')]), patch('kylin_memory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('anthropic', 'claude-haiku-4-5-20251001', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'claude-haiku-4-5-20251001'), (fresh_client, 'claude-haiku-4-5-20251001')]), patch('kylinmemory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
             resp = call_llm(task='compression', provider='anthropic', model='claude-haiku-4-5-20251001', messages=[{'role': 'user', 'content': 'hi'}])
         assert resp.choices[0].message.content == 'fresh-anthropic'
         mock_refresh.assert_called_once_with('anthropic')
@@ -1188,7 +1188,7 @@ class TestAuxiliaryAuthRefreshRetry:
         fresh_client = MagicMock()
         fresh_client.base_url = 'https://chatgpt.com/backend-api/codex'
         fresh_client.chat.completions.create = AsyncMock(return_value=_DummyResponse('fresh-async'))
-        with patch('kylin_memory._vendor.agent.auxiliary_client.resolve_vision_provider_client', side_effect=[('openai-codex', failing_client, 'gpt-5.4'), ('openai-codex', fresh_client, 'gpt-5.4')]), patch('kylin_memory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
+        with patch('kylinmemory._vendor.agent.auxiliary_client.resolve_vision_provider_client', side_effect=[('openai-codex', failing_client, 'gpt-5.4'), ('openai-codex', fresh_client, 'gpt-5.4')]), patch('kylinmemory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
             resp = await async_call_llm(task='vision', provider='openai-codex', model='gpt-5.4', messages=[{'role': 'user', 'content': 'hi'}])
         assert resp.choices[0].message.content == 'fresh-async'
         mock_refresh.assert_called_once_with('openai-codex')
@@ -1199,8 +1199,8 @@ class TestAuxiliaryAuthRefreshRetry:
         monkeypatch.setenv('ANTHROPIC_TOKEN', '')
         monkeypatch.setenv('CLAUDE_CODE_OAUTH_TOKEN', '')
         monkeypatch.setenv('ANTHROPIC_API_KEY', '')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._client_cache', {cache_key: (stale_client, 'claude-haiku-4-5-20251001', None)}), patch('kylin_memory._vendor.agent.anthropic_adapter.read_claude_code_credentials', return_value={'accessToken': 'expired-token', 'refreshToken': 'refresh-token', 'expiresAt': 0}), patch('kylin_memory._vendor.agent.anthropic_adapter.refresh_anthropic_oauth_pure', return_value={'access_token': 'fresh-token', 'refresh_token': 'refresh-token-2', 'expires_at_ms': 9999999999999}) as mock_refresh_oauth, patch('kylin_memory._vendor.agent.anthropic_adapter._write_claude_code_credentials') as mock_write:
-            from kylin_memory._vendor.agent.auxiliary_client import _refresh_provider_credentials
+        with patch('kylinmemory._vendor.agent.auxiliary_client._client_cache', {cache_key: (stale_client, 'claude-haiku-4-5-20251001', None)}), patch('kylinmemory._vendor.agent.anthropic_adapter.read_claude_code_credentials', return_value={'accessToken': 'expired-token', 'refreshToken': 'refresh-token', 'expiresAt': 0}), patch('kylinmemory._vendor.agent.anthropic_adapter.refresh_anthropic_oauth_pure', return_value={'access_token': 'fresh-token', 'refresh_token': 'refresh-token-2', 'expires_at_ms': 9999999999999}) as mock_refresh_oauth, patch('kylinmemory._vendor.agent.anthropic_adapter._write_claude_code_credentials') as mock_write:
+            from kylinmemory._vendor.agent.auxiliary_client import _refresh_provider_credentials
             assert _refresh_provider_credentials('anthropic') is True
         mock_refresh_oauth.assert_called_once_with('refresh-token', use_json=False)
         mock_write.assert_called_once_with('fresh-token', 'refresh-token-2', 9999999999999)
@@ -1214,7 +1214,7 @@ class TestAuxiliaryAuthRefreshRetry:
         fresh_client = MagicMock()
         fresh_client.base_url = 'https://api.anthropic.com'
         fresh_client.chat.completions.create = AsyncMock(return_value=_DummyResponse('fresh-async-anthropic'))
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('anthropic', 'claude-haiku-4-5-20251001', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'claude-haiku-4-5-20251001'), (fresh_client, 'claude-haiku-4-5-20251001')]), patch('kylin_memory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('anthropic', 'claude-haiku-4-5-20251001', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'claude-haiku-4-5-20251001'), (fresh_client, 'claude-haiku-4-5-20251001')]), patch('kylinmemory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=True) as mock_refresh:
             resp = await async_call_llm(task='compression', provider='anthropic', model='claude-haiku-4-5-20251001', messages=[{'role': 'user', 'content': 'hi'}])
         assert resp.choices[0].message.content == 'fresh-async-anthropic'
         mock_refresh.assert_called_once_with('anthropic')
@@ -1248,7 +1248,7 @@ class TestAuxiliaryPoolRotationRetry:
                 self.rotate_calls.append(kwargs)
                 return SimpleNamespace(id='cred-b')
         pool = _Pool()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.4', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'gpt-5.4'), (fresh_client, 'gpt-5.4')]), patch('kylin_memory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=False), patch('kylin_memory._vendor.agent.auxiliary_client.load_pool', return_value=pool), patch('kylin_memory._vendor.agent.auxiliary_client._try_payment_fallback') as mock_fallback:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.4', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'gpt-5.4'), (fresh_client, 'gpt-5.4')]), patch('kylinmemory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=False), patch('kylinmemory._vendor.agent.auxiliary_client.load_pool', return_value=pool), patch('kylinmemory._vendor.agent.auxiliary_client._try_payment_fallback') as mock_fallback:
             resp = call_llm(task='compression', provider='openai-codex', model='gpt-5.4', messages=[{'role': 'user', 'content': 'hi'}])
         assert resp.choices[0].message.content == 'rotated-sync'
         assert stale_client.chat.completions.create.call_count == 2
@@ -1283,7 +1283,7 @@ class TestAuxiliaryPoolRotationRetry:
                 self.rotate_calls.append(kwargs)
                 return SimpleNamespace(id='cred-b')
         pool = _Pool()
-        with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.4', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'gpt-5.4'), (fresh_client, 'gpt-5.4')]), patch('kylin_memory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=False), patch('kylin_memory._vendor.agent.auxiliary_client.load_pool', return_value=pool), patch('kylin_memory._vendor.agent.auxiliary_client._try_payment_fallback') as mock_fallback:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.4', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', side_effect=[(stale_client, 'gpt-5.4'), (fresh_client, 'gpt-5.4')]), patch('kylinmemory._vendor.agent.auxiliary_client._refresh_provider_credentials', return_value=False), patch('kylinmemory._vendor.agent.auxiliary_client.load_pool', return_value=pool), patch('kylinmemory._vendor.agent.auxiliary_client._try_payment_fallback') as mock_fallback:
             resp = await async_call_llm(task='compression', provider='openai-codex', model='gpt-5.4', messages=[{'role': 'user', 'content': 'hi'}])
         assert resp.choices[0].message.content == 'rotated-async'
         assert stale_client.chat.completions.create.await_count == 2
@@ -1305,7 +1305,7 @@ class TestCodexAdapterReasoningTranslation:
     @staticmethod
     def _build_adapter():
         """Build a _CodexCompletionsAdapter with a mocked responses.stream()."""
-        from kylin_memory._vendor.agent.auxiliary_client import _CodexCompletionsAdapter
+        from kylinmemory._vendor.agent.auxiliary_client import _CodexCompletionsAdapter
         from types import SimpleNamespace
         fake_final = SimpleNamespace(output=[SimpleNamespace(type='message', content=[SimpleNamespace(type='output_text', text='hi')])], usage=SimpleNamespace(input_tokens=1, output_tokens=1, total_tokens=2))
 
@@ -1427,10 +1427,10 @@ class TestVisionAutoSkipsKimiCoding:
     def test_kimi_coding_skipped_falls_through_to_openrouter(self, monkeypatch):
         """kimi-coding as main + vision auto → OpenRouter (not kimi)."""
         fake_or_client = MagicMock(name='openrouter_client')
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', lambda: 'kimi-coding')
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._read_main_model', lambda: 'kimi-code')
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', lambda: 'kimi-coding')
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._read_main_model', lambda: 'kimi-code')
         rpc_mock = MagicMock(side_effect=AssertionError('resolve_provider_client should NOT be called for kimi-coding on the vision auto path'))
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client', rpc_mock)
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client', rpc_mock)
 
         def fake_strict(provider, model=None):
             if provider == 'openrouter':
@@ -1438,7 +1438,7 @@ class TestVisionAutoSkipsKimiCoding:
             if provider == 'nous':
                 return (None, None)
             raise AssertionError(f'strict vision backend should not be called for {provider!r} when main provider is kimi-coding')
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', fake_strict)
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', fake_strict)
         provider, client, model = resolve_vision_provider_client()
         assert provider == 'openrouter'
         assert client is fake_or_client
@@ -1447,11 +1447,11 @@ class TestVisionAutoSkipsKimiCoding:
     def test_kimi_coding_cn_skipped_too(self, monkeypatch):
         """Same skip applies to the CN variant."""
         fake_or_client = MagicMock(name='openrouter_client')
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', lambda: 'kimi-coding-cn')
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._read_main_model', lambda: 'kimi-code')
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', lambda: 'kimi-coding-cn')
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._read_main_model', lambda: 'kimi-code')
         rpc_mock = MagicMock(side_effect=AssertionError('resolve_provider_client should NOT be called for kimi-coding-cn'))
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client', rpc_mock)
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', lambda p, m=None: (fake_or_client, 'gemini') if p == 'openrouter' else (None, None))
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client', rpc_mock)
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._resolve_strict_vision_backend', lambda p, m=None: (fake_or_client, 'gemini') if p == 'openrouter' else (None, None))
         provider, client, _ = resolve_vision_provider_client()
         assert provider == 'openrouter'
         assert client is fake_or_client
@@ -1462,10 +1462,10 @@ class TestVisionAutoSkipsKimiCoding:
         adds image_in capability to Kimi Code), the explicit path still
         routes to kimi-coding — only the auto branch applies the skip.
         """
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', lambda: 'openrouter')
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', lambda: 'openrouter')
         fake_kimi_client = MagicMock(name='kimi_client')
         gcc_mock = MagicMock(return_value=(fake_kimi_client, 'kimi-code'))
-        monkeypatch.setattr('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', gcc_mock)
+        monkeypatch.setattr('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', gcc_mock)
         provider, client, model = resolve_vision_provider_client(provider='kimi-coding')
         assert provider == 'kimi-coding'
         assert client is fake_kimi_client
@@ -1473,7 +1473,7 @@ class TestVisionAutoSkipsKimiCoding:
 
     def test_skip_set_covers_exactly_known_entries(self):
         """Guard against accidental widening of the skip list."""
-        from kylin_memory._vendor.agent.auxiliary_client import _PROVIDERS_WITHOUT_VISION
+        from kylinmemory._vendor.agent.auxiliary_client import _PROVIDERS_WITHOUT_VISION
         assert _PROVIDERS_WITHOUT_VISION == frozenset({'kimi-coding', 'kimi-coding-cn'})
 
 class TestCodexAuxiliaryAdapterTimeout:
@@ -1547,7 +1547,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
     """
 
     def test_evict_cached_client_instance_drops_direct_match(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _evict_cached_client_instance
+        from kylinmemory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _evict_cached_client_instance
         target = MagicMock(name='target_client')
         other = MagicMock(name='other_client')
         with _client_cache_lock:
@@ -1564,7 +1564,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
 
     def test_evict_cached_client_instance_walks_codex_wrapper(self):
         """Closing the underlying OpenAI client must evict the Codex shim."""
-        from kylin_memory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _evict_cached_client_instance, CodexAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _evict_cached_client_instance, CodexAuxiliaryClient
         real = SimpleNamespace(api_key='k', base_url='https://chatgpt.com/backend-api/codex', responses=SimpleNamespace(stream=lambda **k: None), close=lambda: None)
         wrapper = CodexAuxiliaryClient(real, 'gpt-5.5')
         with _client_cache_lock:
@@ -1578,7 +1578,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
                 _client_cache.clear()
 
     def test_evict_cached_client_instance_handles_none_and_misses(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _evict_cached_client_instance
+        from kylinmemory._vendor.agent.auxiliary_client import _evict_cached_client_instance
         assert _evict_cached_client_instance(None) is False
         assert _evict_cached_client_instance(MagicMock()) is False
 
@@ -1594,7 +1594,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
         Regression for the async-side gap left by #23482, which fixed the
         sync wrapper's _real_client walk but missed the async wrappers.
         """
-        from kylin_memory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _evict_cached_client_instance, CodexAuxiliaryClient, AsyncCodexAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _evict_cached_client_instance, CodexAuxiliaryClient, AsyncCodexAuxiliaryClient
         real = SimpleNamespace(api_key='k', base_url='https://chatgpt.com/backend-api/codex', responses=SimpleNamespace(stream=lambda **k: None), close=lambda: None)
         sync_wrapper = CodexAuxiliaryClient(real, 'gpt-5.5')
         async_wrapper = AsyncCodexAuxiliaryClient(sync_wrapper)
@@ -1612,7 +1612,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
 
     def test_codex_timeout_evicts_cached_wrapper(self):
         """The timeout closer evicts the cache entry that wraps the closed client."""
-        from kylin_memory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _CodexCompletionsAdapter, CodexAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock, _CodexCompletionsAdapter, CodexAuxiliaryClient
 
         class SlowAliveStream:
 
@@ -1667,7 +1667,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
         a real network call.  The contract under test is cache eviction,
         not the fallback gate.
         """
-        from kylin_memory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock
+        from kylinmemory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock
         poisoned = MagicMock(name='poisoned_client')
         poisoned.base_url = 'https://chatgpt.com/backend-api/codex'
         poisoned.chat.completions.create.side_effect = ConnectionError('transport closed')
@@ -1676,7 +1676,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
             _client_cache.clear()
             _client_cache[cache_key] = (poisoned, 'gpt-5.5', None)
         try:
-            with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.5', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(poisoned, 'gpt-5.5')), patch('kylin_memory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(None, None, '')):
+            with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.5', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(poisoned, 'gpt-5.5')), patch('kylinmemory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(None, None, '')):
                 with pytest.raises(ConnectionError):
                     call_llm(task='compression', messages=[{'role': 'user', 'content': 'x'}])
             assert cache_key not in _client_cache, 'connection error must evict cached client so the next call rebuilds'
@@ -1686,7 +1686,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
 
     @pytest.mark.asyncio
     async def test_async_call_llm_evicts_on_connection_error_with_explicit_provider(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock
+        from kylinmemory._vendor.agent.auxiliary_client import _client_cache, _client_cache_lock
         poisoned = MagicMock(name='poisoned_async_client')
         poisoned.base_url = 'https://chatgpt.com/backend-api/codex'
         poisoned.chat.completions.create = AsyncMock(side_effect=ConnectionError('transport closed'))
@@ -1695,7 +1695,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
             _client_cache.clear()
             _client_cache[cache_key] = (poisoned, 'gpt-5.5', None)
         try:
-            with patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.5', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(poisoned, 'gpt-5.5')), patch('kylin_memory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(None, None, '')):
+            with patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('openai-codex', 'gpt-5.5', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(poisoned, 'gpt-5.5')), patch('kylinmemory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(None, None, '')):
                 with pytest.raises(ConnectionError):
                     await async_call_llm(task='compression', messages=[{'role': 'user', 'content': 'x'}])
             assert cache_key not in _client_cache
@@ -1740,7 +1740,7 @@ class TestBuildCallKwargsToolDedup:
         assert 'tools' not in kwargs
 
     def test_context_priority_is_added_to_extra_body(self):
-        from kylin_memory._vendor.agent.request_priority import reset_current_request_priority, set_current_request_priority
+        from kylinmemory._vendor.agent.request_priority import reset_current_request_priority, set_current_request_priority
         token = set_current_request_priority(2)
         try:
             kwargs = _build_call_kwargs(provider='openai', model='gpt-4o', messages=[{'role': 'user', 'content': 'hello'}], extra_body={'metadata': {'source': 'test'}})
@@ -1763,7 +1763,7 @@ class TestNvidiaBillingHeaders:
         monkeypatch.delenv('NVIDIA_BASE_URL', raising=False)
         mock_openai = MagicMock()
         mock_openai.return_value = MagicMock(name='nvidia-client')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
+        with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
             client, model = resolve_provider_client(provider='nvidia', model='nvidia/test-model')
         assert client is not None
         assert model == 'nvidia/test-model'
@@ -1776,7 +1776,7 @@ class TestNvidiaBillingHeaders:
         monkeypatch.setenv('NVIDIA_BASE_URL', 'http://localhost:8000/v1')
         mock_openai = MagicMock()
         mock_openai.return_value = MagicMock(name='nvidia-local-client')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
+        with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
             client, model = resolve_provider_client(provider='nvidia', model='nvidia/test-model')
         assert client is not None
         assert model == 'nvidia/test-model'
@@ -1796,7 +1796,7 @@ class TestOpenRouterExplicitApiKey:
         monkeypatch.setenv('OPENROUTER_API_KEY', 'env-fallback-key')
         mock_openai = MagicMock()
         mock_openai.return_value = MagicMock(name='openrouter-client')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
+        with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
             client, model = resolve_provider_client(provider='openrouter', explicit_api_key='explicit-pool-key')
             assert client is not None
             mock_openai.assert_called_once()
@@ -1812,7 +1812,7 @@ class TestOpenRouterExplicitApiKey:
         monkeypatch.setenv('OPENROUTER_API_KEY', 'env-fallback-key')
         mock_openai = MagicMock()
         mock_openai.return_value = MagicMock(name='openrouter-client')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
+        with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI', mock_openai):
             client, model = resolve_provider_client(provider='openrouter', explicit_api_key=None)
             assert client is not None
             mock_openai.assert_called_once()
@@ -1830,9 +1830,9 @@ class TestAnthropicExplicitApiKey:
 
     def test_try_anthropic_uses_explicit_api_key_over_env(self):
         """_try_anthropic(explicit_api_key) must use the supplied key, not the env fallback."""
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='env-fallback-key'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='env-fallback-key'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             mock_build.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _try_anthropic
+            from kylinmemory._vendor.agent.auxiliary_client import _try_anthropic
             client, model = _try_anthropic('explicit-pool-key')
         assert client is not None
         assert mock_build.call_args.args[0] == 'explicit-pool-key', f'Expected explicit_api_key to be passed, got: {mock_build.call_args.args[0]}'
@@ -1840,16 +1840,16 @@ class TestAnthropicExplicitApiKey:
 
     def test_try_anthropic_without_explicit_key_falls_back_to_resolve(self):
         """Without explicit_api_key, _try_anthropic falls back to resolve_anthropic_token."""
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='env-fallback-key'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='env-fallback-key'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             mock_build.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import _try_anthropic
+            from kylinmemory._vendor.agent.auxiliary_client import _try_anthropic
             client, model = _try_anthropic()
         assert client is not None
         assert mock_build.call_args.args[0] == 'env-fallback-key'
 
     def test_resolve_provider_client_passes_explicit_api_key_to_anthropic(self):
         """resolve_provider_client(provider='anthropic', explicit_api_key=...) must propagate the key."""
-        with patch('kylin_memory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='env-key'), patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylin_memory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
+        with patch('kylinmemory._vendor.agent.anthropic_adapter.resolve_anthropic_token', return_value='env-key'), patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client') as mock_build, patch('kylinmemory._vendor.agent.auxiliary_client._select_pool_entry', return_value=(False, None)):
             mock_build.return_value = MagicMock()
             client, model = resolve_provider_client(provider='anthropic', explicit_api_key='explicit-fallback-key')
         assert client is not None
@@ -1865,21 +1865,21 @@ class TestAuxUnhealthyCache:
     """
 
     def setup_method(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _reset_aux_unhealthy_cache
+        from kylinmemory._vendor.agent.auxiliary_client import _reset_aux_unhealthy_cache
         _reset_aux_unhealthy_cache()
 
     def teardown_method(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _reset_aux_unhealthy_cache
+        from kylinmemory._vendor.agent.auxiliary_client import _reset_aux_unhealthy_cache
         _reset_aux_unhealthy_cache()
 
     def test_mark_then_skip(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _mark_provider_unhealthy, _is_provider_unhealthy
+        from kylinmemory._vendor.agent.auxiliary_client import _mark_provider_unhealthy, _is_provider_unhealthy
         assert _is_provider_unhealthy('openrouter') is False
         _mark_provider_unhealthy('openrouter')
         assert _is_provider_unhealthy('openrouter') is True
 
     def test_ttl_expiry_evicts(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _mark_provider_unhealthy, _is_provider_unhealthy, _aux_unhealthy_until
+        from kylinmemory._vendor.agent.auxiliary_client import _mark_provider_unhealthy, _is_provider_unhealthy, _aux_unhealthy_until
         _mark_provider_unhealthy('openrouter', ttl=0.01)
         assert _is_provider_unhealthy('openrouter') is True
         import time
@@ -1890,16 +1890,16 @@ class TestAuxUnhealthyCache:
     def test_alias_normalization(self):
         """'codex' should normalize to 'openai-codex' so the cache lookup
         matches the chain label."""
-        from kylin_memory._vendor.agent.auxiliary_client import _mark_provider_unhealthy, _is_provider_unhealthy
+        from kylinmemory._vendor.agent.auxiliary_client import _mark_provider_unhealthy, _is_provider_unhealthy
         _mark_provider_unhealthy('codex')
         assert _is_provider_unhealthy('openai-codex') is True
 
     def test_resolve_auto_skips_unhealthy_step2(self):
         """_resolve_auto Step-2 chain skips unhealthy providers."""
-        from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto, _mark_provider_unhealthy
+        from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto, _mark_provider_unhealthy
         nous_client = MagicMock()
         _mark_provider_unhealthy('openrouter')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value=''), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value=''), patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter') as or_try, patch('kylin_memory._vendor.agent.auxiliary_client._try_nous', return_value=(nous_client, 'nous-model')), patch('kylin_memory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value=''), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value=''), patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter') as or_try, patch('kylinmemory._vendor.agent.auxiliary_client._try_nous', return_value=(nous_client, 'nous-model')), patch('kylinmemory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
             client, model = _resolve_auto()
         assert client is nous_client
         assert model == 'nous-model'
@@ -1909,10 +1909,10 @@ class TestAuxUnhealthyCache:
         """Step-1 also consults the unhealthy cache so a depleted main
         provider doesn't burn a 402 RTT every aux call. Falls through to
         Step-2 chain (which also respects the cache)."""
-        from kylin_memory._vendor.agent.auxiliary_client import _resolve_auto, _mark_provider_unhealthy
+        from kylinmemory._vendor.agent.auxiliary_client import _resolve_auto, _mark_provider_unhealthy
         nous_client = MagicMock()
         _mark_provider_unhealthy('openrouter')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4.6'), patch('kylin_memory._vendor.agent.auxiliary_client.resolve_provider_client') as step1, patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter') as or_try, patch('kylin_memory._vendor.agent.auxiliary_client._try_nous', return_value=(nous_client, 'n-model')), patch('kylin_memory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._read_main_model', return_value='anthropic/claude-sonnet-4.6'), patch('kylinmemory._vendor.agent.auxiliary_client.resolve_provider_client') as step1, patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter') as or_try, patch('kylinmemory._vendor.agent.auxiliary_client._try_nous', return_value=(nous_client, 'n-model')), patch('kylinmemory._vendor.agent.auxiliary_client._try_custom_endpoint', return_value=(None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
             client, model = _resolve_auto()
         step1.assert_not_called()
         or_try.assert_not_called()
@@ -1922,10 +1922,10 @@ class TestAuxUnhealthyCache:
         """_try_payment_fallback also consults the unhealthy cache so a 402
         on OpenRouter doesn't cause a second OR call within the same chain
         iteration if it gets re-entered."""
-        from kylin_memory._vendor.agent.auxiliary_client import _try_payment_fallback, _mark_provider_unhealthy
+        from kylinmemory._vendor.agent.auxiliary_client import _try_payment_fallback, _mark_provider_unhealthy
         nous_client = MagicMock()
         _mark_provider_unhealthy('local/custom')
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylin_memory._vendor.agent.auxiliary_client._try_openrouter') as or_try, patch('kylin_memory._vendor.agent.auxiliary_client._try_nous', return_value=(nous_client, 'n-model')), patch('kylin_memory._vendor.agent.auxiliary_client._try_custom_endpoint') as custom_try, patch('kylin_memory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_main_provider', return_value='openrouter'), patch('kylinmemory._vendor.agent.auxiliary_client._try_openrouter') as or_try, patch('kylinmemory._vendor.agent.auxiliary_client._try_nous', return_value=(nous_client, 'n-model')), patch('kylinmemory._vendor.agent.auxiliary_client._try_custom_endpoint') as custom_try, patch('kylinmemory._vendor.agent.auxiliary_client._resolve_api_key_provider', return_value=(None, None)):
             client, model, label = _try_payment_fallback('openrouter', task='compression')
         assert client is nous_client
         assert label == 'nous'
@@ -1936,7 +1936,7 @@ class TestAuxUnhealthyCache:
         """A 402 from call_llm causes the provider to be marked unhealthy
         so the next call skips it instead of re-trying the same depleted
         endpoint."""
-        from kylin_memory._vendor.agent.auxiliary_client import call_llm, _is_provider_unhealthy
+        from kylinmemory._vendor.agent.auxiliary_client import call_llm, _is_provider_unhealthy
         monkeypatch.setenv('OPENROUTER_API_KEY', 'or-key')
         primary_client = MagicMock()
         primary_client.base_url = 'https://openrouter.ai/api/v1/'
@@ -1947,7 +1947,7 @@ class TestAuxUnhealthyCache:
         nous_resp = MagicMock()
         nous_resp.choices = [MagicMock(message=MagicMock(content='ok'))]
         nous_client.chat.completions.create.return_value = nous_resp
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'google/gemini-3-flash-preview')), patch('kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'google/gemini-3-flash-preview', None, None, None)), patch('kylin_memory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(nous_client, 'n-model', 'nous')), patch('kylin_memory._vendor.agent.auxiliary_client._build_call_kwargs', return_value={'model': 'n-model', 'messages': [{'role': 'user', 'content': 'hi'}]}):
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client', return_value=(primary_client, 'google/gemini-3-flash-preview')), patch('kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model', return_value=('auto', 'google/gemini-3-flash-preview', None, None, None)), patch('kylinmemory._vendor.agent.auxiliary_client._try_payment_fallback', return_value=(nous_client, 'n-model', 'nous')), patch('kylinmemory._vendor.agent.auxiliary_client._build_call_kwargs', return_value={'model': 'n-model', 'messages': [{'role': 'user', 'content': 'hi'}]}):
             assert _is_provider_unhealthy('openrouter') is False
             call_llm(task='compression', messages=[{'role': 'user', 'content': 'hi'}])
             assert _is_provider_unhealthy('openrouter') is True

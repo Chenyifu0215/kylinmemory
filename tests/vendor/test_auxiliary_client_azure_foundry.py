@@ -30,7 +30,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _reset_credential_cache():
-    from kylin_memory._vendor.agent.azure_identity_adapter import reset_credential_cache
+    from kylinmemory._vendor.agent.azure_identity_adapter import reset_credential_cache
     reset_credential_cache()
     yield
     reset_credential_cache()
@@ -39,7 +39,7 @@ def _reset_credential_cache():
 def fake_azure_identity(monkeypatch):
     """Stand-in for azure.identity (keeps CI hermetic when the SDK is
     not installed)."""
-    from kylin_memory._vendor.agent import azure_identity_adapter as _adapter
+    from kylinmemory._vendor.agent import azure_identity_adapter as _adapter
     last = {'scope': None}
 
     def _provider(scope):
@@ -54,13 +54,13 @@ def patch_load_config(monkeypatch):
     """Helper to set model_cfg seen by _try_azure_foundry."""
 
     def _apply(model_cfg):
-        monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.config.load_config', lambda: {'model': model_cfg})
+        monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.config.load_config', lambda: {'model': model_cfg})
     return _apply
 
 class TestAuxAzureFoundryApiKey:
 
     def test_chat_completions_returns_plain_openai_client(self, monkeypatch, patch_load_config):
-        from kylin_memory._vendor.agent.auxiliary_client import _try_azure_foundry
+        from kylinmemory._vendor.agent.auxiliary_client import _try_azure_foundry
         from openai import OpenAI as _OpenAI
         monkeypatch.setenv('AZURE_FOUNDRY_API_KEY', 'sk-azure-static-key')
         patch_load_config({'provider': 'azure-foundry', 'base_url': 'https://r.openai.azure.com/openai/v1', 'api_mode': 'chat_completions', 'default': 'gpt-4o'})
@@ -71,7 +71,7 @@ class TestAuxAzureFoundryApiKey:
         assert client.api_key == 'sk-azure-static-key'
 
     def test_codex_responses_wraps_in_codex_aux_client(self, monkeypatch, patch_load_config):
-        from kylin_memory._vendor.agent.auxiliary_client import _try_azure_foundry, CodexAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import _try_azure_foundry, CodexAuxiliaryClient
         monkeypatch.setenv('AZURE_FOUNDRY_API_KEY', 'sk-azure-static-key')
         patch_load_config({'provider': 'azure-foundry', 'base_url': 'https://r.openai.azure.com/openai/v1', 'api_mode': 'chat_completions', 'default': 'gpt-5.4-mini'})
         client, resolved = _try_azure_foundry(model='gpt-5.4-mini')
@@ -80,7 +80,7 @@ class TestAuxAzureFoundryApiKey:
         assert client.api_key == 'sk-azure-static-key'
 
     def test_no_key_returns_none(self, monkeypatch, patch_load_config):
-        from kylin_memory._vendor.agent.auxiliary_client import _try_azure_foundry
+        from kylinmemory._vendor.agent.auxiliary_client import _try_azure_foundry
         monkeypatch.delenv('AZURE_FOUNDRY_API_KEY', raising=False)
         patch_load_config({'provider': 'azure-foundry', 'base_url': 'https://r.openai.azure.com/openai/v1', 'api_mode': 'chat_completions', 'default': 'gpt-4o'})
         client, resolved = _try_azure_foundry(model='gpt-4o')
@@ -90,7 +90,7 @@ class TestAuxAzureFoundryApiKey:
     def test_no_model_returns_none(self, monkeypatch, patch_load_config):
         """Azure has no fallback aux model — fail soft so the auto chain
         can try other providers."""
-        from kylin_memory._vendor.agent.auxiliary_client import _try_azure_foundry
+        from kylinmemory._vendor.agent.auxiliary_client import _try_azure_foundry
         monkeypatch.setenv('AZURE_FOUNDRY_API_KEY', 'sk-azure-static-key')
         patch_load_config({'provider': 'azure-foundry', 'base_url': 'https://r.openai.azure.com/openai/v1', 'api_mode': 'chat_completions'})
         client, resolved = _try_azure_foundry()
@@ -111,7 +111,7 @@ class TestAuxAzureFoundryEntra:
         per request to mint ``Authorization: Bearer <token>``; that
         behaviour is the documented Microsoft/OpenAI contract we rely on.
         """
-        from kylin_memory._vendor.agent import auxiliary_client as _aux
+        from kylinmemory._vendor.agent import auxiliary_client as _aux
         received = {}
 
         class _FakeOpenAI:
@@ -134,7 +134,7 @@ class TestAuxAzureFoundryEntra:
         """GPT-5.x deployment on Entra ID — auto-upgraded to
         codex_responses, wrapped in CodexAuxiliaryClient, callable
         api_key handed to the underlying OpenAI SDK."""
-        from kylin_memory._vendor.agent import auxiliary_client as _aux
+        from kylinmemory._vendor.agent import auxiliary_client as _aux
         received = {}
 
         class _FakeOpenAI:
@@ -157,8 +157,8 @@ class TestAuxAzureFoundryEntra:
         detects the callable and installs the bearer-injecting httpx
         event hook on a custom ``httpx.Client`` passed to the
         Anthropic SDK via ``http_client=``."""
-        from kylin_memory._vendor.agent import auxiliary_client as _aux
-        from kylin_memory._vendor.agent import anthropic_adapter as _anthropic
+        from kylinmemory._vendor.agent import auxiliary_client as _aux
+        from kylinmemory._vendor.agent import anthropic_adapter as _anthropic
         received = {}
 
         class _FakeOpenAI:
@@ -195,7 +195,7 @@ class TestResolveProviderClientAzureFoundry:
         generic api-key registry path that would call
         ``resolve_api_key_provider_credentials`` and return None for
         Entra users."""
-        from kylin_memory._vendor.agent import auxiliary_client as _aux
+        from kylinmemory._vendor.agent import auxiliary_client as _aux
         received = {}
 
         class _FakeOpenAI:
@@ -216,10 +216,10 @@ class TestResolveProviderClientAzureFoundry:
         (e.g. no model + no key), we return (None, None) and log a
         clear warning pointing at ``kylin-agent-runtime doctor``."""
         import logging
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         monkeypatch.delenv('AZURE_FOUNDRY_API_KEY', raising=False)
         patch_load_config({'provider': 'azure-foundry', 'base_url': 'https://r.openai.azure.com/openai/v1', 'api_mode': 'chat_completions'})
-        with caplog.at_level(logging.WARNING, logger='kylin_memory._vendor.agent.auxiliary_client'):
+        with caplog.at_level(logging.WARNING, logger='kylinmemory._vendor.agent.auxiliary_client'):
             client, resolved = resolve_provider_client('azure-foundry')
         assert client is None
         assert resolved is None

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kylinmemory"
 version = "0.2.0"
-description = "Standalone L0/L1/L2/L3 memory pipeline extracted from Kylin Agent"
+description = "kylinmemory: standalone L0/L1/L2/L3 memory pipeline"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -27,18 +27,18 @@ anthropic = ["anthropic>=0.86,<0.88"]
 dev = ["pytest>=8,<10", "pytest-asyncio>=1.3,<2", "build>=1.2,<2", "anthropic>=0.86,<0.88"]
 
 [project.scripts]
-kylinmemory = "kylin_memory.cli:main"
-kylinmemory-profile = "kylin_memory.user_profile.cli:main"
+kylinmemory = "kylinmemory.cli:main"
+kylinmemory-profile = "kylinmemory.user_profile.cli:main"
 
-[project.entry-points."kylin_memory.providers"]
-layered = "kylin_memory.runtime:MemorySystem"
+[project.entry-points."kylinmemory.providers"]
+layered = "kylinmemory.runtime:MemorySystem"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-kylin_memory = ["defaults.json", "plugin_template/*"]
-"kylin_memory._vendor" = ["plugins/model-providers/*/*.py", "plugins/model-providers/*/*.yaml"]
+kylinmemory = ["defaults.json", "plugin_template/*"]
+"kylinmemory._vendor" = ["plugins/model-providers/*/*.py", "plugins/model-providers/*/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

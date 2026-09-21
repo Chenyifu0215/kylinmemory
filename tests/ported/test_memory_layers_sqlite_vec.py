@@ -6,7 +6,7 @@ import importlib.util
 
 import pytest
 
-from kylin_memory.memory_layers import Atom, AtomStore
+from kylinmemory.memory_layers import Atom, AtomStore
 
 
 pytestmark = pytest.mark.skipif(

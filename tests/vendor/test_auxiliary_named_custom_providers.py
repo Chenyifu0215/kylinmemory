@@ -22,39 +22,39 @@ class TestNormalizeVisionProvider:
 
     def test_main_resolves_to_named_custom(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'my-model', 'provider': 'custom:beans'}, 'custom_providers': [{'name': 'beans', 'base_url': 'http://localhost/v1'}]})
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('main') == 'custom:beans'
 
     def test_main_resolves_to_openrouter(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'anthropic/claude-sonnet-4', 'provider': 'openrouter'}})
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('main') == 'openrouter'
 
     def test_main_resolves_to_deepseek(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'deepseek-chat', 'provider': 'deepseek'}})
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('main') == 'deepseek'
 
     def test_main_falls_back_to_custom_when_no_provider(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'gpt-4o'}})
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('main') == 'custom'
 
     def test_bare_provider_name_unchanged(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('beans') == 'beans'
         assert _normalize_vision_provider('deepseek') == 'deepseek'
 
     def test_custom_colon_named_provider_preserved(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('custom:beans') == 'beans'
 
     def test_codex_alias_still_works(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('codex') == 'openai-codex'
 
     def test_auto_unchanged(self):
-        from kylin_memory._vendor.agent.auxiliary_client import _normalize_vision_provider
+        from kylinmemory._vendor.agent.auxiliary_client import _normalize_vision_provider
         assert _normalize_vision_provider('auto') == 'auto'
         assert _normalize_vision_provider(None) == 'auto'
 
@@ -63,7 +63,7 @@ class TestResolveProviderClientMainAlias:
 
     def test_main_resolves_to_named_custom_provider(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'my-model', 'provider': 'beans'}, 'custom_providers': [{'name': 'beans', 'base_url': 'http://beans.local/v1', 'api_key': 'k'}]})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         client, model = resolve_provider_client('main', 'override-model')
         assert client is not None
         assert model == 'override-model'
@@ -71,16 +71,16 @@ class TestResolveProviderClientMainAlias:
 
     def test_main_with_custom_colon_prefix(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'my-model', 'provider': 'custom:beans'}, 'custom_providers': [{'name': 'beans', 'base_url': 'http://beans.local/v1', 'api_key': 'k'}]})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         client, model = resolve_provider_client('main', 'test')
         assert client is not None
         assert 'beans.local' in str(client.base_url)
 
     def test_main_resolves_github_copilot_alias(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'gpt-5.4', 'provider': 'github-copilot'}})
-        with patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'ghu_test_token', 'base_url': 'https://api.githubcopilot.com'}), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'ghu_test_token', 'base_url': 'https://api.githubcopilot.com'}), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             mock_openai.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
             client, model = resolve_provider_client('main', 'gpt-5.4')
         assert client is not None
         assert model == 'gpt-5.4'
@@ -91,7 +91,7 @@ class TestResolveProviderClientNamedCustom:
 
     def test_named_custom_provider(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'test-model'}, 'custom_providers': [{'name': 'beans', 'base_url': 'http://beans.local/v1', 'api_key': 'k'}]})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         client, model = resolve_provider_client('beans', 'my-model')
         assert client is not None
         assert model == 'my-model'
@@ -99,20 +99,20 @@ class TestResolveProviderClientNamedCustom:
 
     def test_named_custom_provider_default_model(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'main-model'}, 'custom_providers': [{'name': 'beans', 'base_url': 'http://beans.local/v1', 'api_key': 'k'}]})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         client, model = resolve_provider_client('beans')
         assert client is not None
         assert model == 'main-model'
 
     def test_named_custom_no_api_key_uses_fallback(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'test'}, 'custom_providers': [{'name': 'local', 'base_url': 'http://localhost:8080/v1'}]})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         client, model = resolve_provider_client('local', 'test')
         assert client is not None
 
     def test_nonexistent_named_custom_falls_through(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'test'}, 'custom_providers': [{'name': 'beans', 'base_url': 'http://beans.local/v1'}]})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         client, model = resolve_provider_client('coffee', 'test')
         assert client is None
 
@@ -121,27 +121,27 @@ class TestResolveProviderClientModelNormalization:
 
     def test_matching_native_prefix_is_stripped_for_main_provider(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'zai/glm-5.1', 'provider': 'zai'}})
-        with patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'glm-key', 'base_url': 'https://api.z.ai/api/paas/v4'}), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'glm-key', 'base_url': 'https://api.z.ai/api/paas/v4'}), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             mock_openai.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
             client, model = resolve_provider_client('main', 'zai/glm-5.1')
         assert client is not None
         assert model == 'glm-5.1'
 
     def test_non_matching_prefix_is_preserved_for_direct_provider(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'zai/glm-5.1', 'provider': 'zai'}})
-        with patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'glm-key', 'base_url': 'https://api.z.ai/api/paas/v4'}), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'glm-key', 'base_url': 'https://api.z.ai/api/paas/v4'}), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             mock_openai.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
             client, model = resolve_provider_client('zai', 'google/gemini-2.5-pro')
         assert client is not None
         assert model == 'google/gemini-2.5-pro'
 
     def test_aggregator_vendor_slug_is_preserved(self, monkeypatch):
         monkeypatch.setenv('OPENROUTER_API_KEY', 'or-key')
-        with patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             mock_openai.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
             client, model = resolve_provider_client('openrouter', 'anthropic/claude-sonnet-4.6')
         assert client is not None
         assert model == 'anthropic/claude-sonnet-4.6'
@@ -151,9 +151,9 @@ class TestResolveVisionProviderClientModelNormalization:
 
     def test_vision_auto_strips_matching_main_provider_prefix(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'zai/glm-5.1', 'provider': 'zai'}})
-        with patch('kylin_memory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'glm-key', 'base_url': 'https://api.z.ai/api/paas/v4'}), patch('kylin_memory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._read_nous_auth', return_value=None), patch('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_api_key_provider_credentials', return_value={'api_key': 'glm-key', 'base_url': 'https://api.z.ai/api/paas/v4'}), patch('kylinmemory._vendor.agent.auxiliary_client.OpenAI') as mock_openai:
             mock_openai.return_value = MagicMock()
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client()
         assert provider == 'zai'
         assert client is not None
@@ -164,9 +164,9 @@ class TestVisionPathApiMode:
 
     def test_explicit_provider_passes_api_mode(self, tmp_path):
         _write_config(tmp_path, {'model': {'default': 'test-model'}, 'auxiliary': {'vision': {'api_mode': 'chat_completions'}}})
-        with patch('kylin_memory._vendor.agent.auxiliary_client._get_cached_client') as mock_gcc:
+        with patch('kylinmemory._vendor.agent.auxiliary_client._get_cached_client') as mock_gcc:
             mock_gcc.return_value = (MagicMock(), 'test-model')
-            from kylin_memory._vendor.agent.auxiliary_client import resolve_vision_provider_client
+            from kylinmemory._vendor.agent.auxiliary_client import resolve_vision_provider_client
             provider, client, model = resolve_vision_provider_client(provider='deepseek')
         mock_gcc.assert_called_once()
         _, kwargs = mock_gcc.call_args
@@ -188,7 +188,7 @@ class TestProvidersDictApiModeAnthropicMessages:
     def test_providers_dict_propagates_api_mode(self, tmp_path, monkeypatch):
         monkeypatch.setenv('MYRELAY_API_KEY', 'sk-test')
         _write_config(tmp_path, {'providers': {'myrelay': {'name': 'myrelay', 'base_url': 'https://example-relay.test/anthropic', 'key_env': 'MYRELAY_API_KEY', 'api_mode': 'anthropic_messages', 'default_model': 'claude-opus-4-7'}}})
-        from kylin_memory._vendor.kylin_agent_runtime_cli.runtime_provider import _get_named_custom_provider
+        from kylinmemory._vendor.kylin_agent_runtime_cli.runtime_provider import _get_named_custom_provider
         entry = _get_named_custom_provider('myrelay')
         assert entry is not None
         assert entry.get('api_mode') == 'anthropic_messages'
@@ -197,14 +197,14 @@ class TestProvidersDictApiModeAnthropicMessages:
 
     def test_providers_dict_invalid_api_mode_is_dropped(self, tmp_path):
         _write_config(tmp_path, {'providers': {'weird': {'name': 'weird', 'base_url': 'https://example.test', 'api_mode': 'bogus_nonsense', 'default_model': 'x'}}})
-        from kylin_memory._vendor.kylin_agent_runtime_cli.runtime_provider import _get_named_custom_provider
+        from kylinmemory._vendor.kylin_agent_runtime_cli.runtime_provider import _get_named_custom_provider
         entry = _get_named_custom_provider('weird')
         assert entry is not None
         assert 'api_mode' not in entry
 
     def test_providers_dict_without_api_mode_is_unchanged(self, tmp_path):
         _write_config(tmp_path, {'providers': {'localchat': {'name': 'localchat', 'base_url': 'http://127.0.0.1:1234/v1', 'api_key': 'local-key', 'default_model': 'llama-3'}}})
-        from kylin_memory._vendor.kylin_agent_runtime_cli.runtime_provider import _get_named_custom_provider
+        from kylinmemory._vendor.kylin_agent_runtime_cli.runtime_provider import _get_named_custom_provider
         entry = _get_named_custom_provider('localchat')
         assert entry is not None
         assert 'api_mode' not in entry
@@ -214,7 +214,7 @@ class TestProvidersDictApiModeAnthropicMessages:
         route through AnthropicAuxiliaryClient."""
         monkeypatch.setenv('MYRELAY_API_KEY', 'sk-test')
         _write_config(tmp_path, {'providers': {'myrelay': {'name': 'myrelay', 'base_url': 'https://example-relay.test/anthropic', 'key_env': 'MYRELAY_API_KEY', 'api_mode': 'anthropic_messages', 'default_model': 'claude-opus-4-7'}}})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client, AnthropicAuxiliaryClient, AsyncAnthropicAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client, AnthropicAuxiliaryClient, AsyncAnthropicAuxiliaryClient
         sync_client, sync_model = resolve_provider_client('myrelay', async_mode=False)
         assert isinstance(sync_client, AnthropicAuxiliaryClient), f'expected AnthropicAuxiliaryClient, got {type(sync_client).__name__}'
         assert sync_model == 'claude-opus-4-7'
@@ -227,7 +227,7 @@ class TestProvidersDictApiModeAnthropicMessages:
         api_mode anthropic_messages must produce an Anthropic client."""
         monkeypatch.setenv('MYRELAY_API_KEY', 'sk-test')
         _write_config(tmp_path, {'providers': {'myrelay': {'name': 'myrelay', 'base_url': 'https://example-relay.test/anthropic', 'key_env': 'MYRELAY_API_KEY', 'api_mode': 'anthropic_messages', 'default_model': 'claude-opus-4-7'}}, 'auxiliary': {'compression': {'provider': 'myrelay', 'model': 'claude-sonnet-4.6'}}, 'model': {'provider': 'openrouter', 'default': 'anthropic/claude-sonnet-4.6'}})
-        from kylin_memory._vendor.agent.auxiliary_client import get_async_text_auxiliary_client, get_text_auxiliary_client, AnthropicAuxiliaryClient, AsyncAnthropicAuxiliaryClient
+        from kylinmemory._vendor.agent.auxiliary_client import get_async_text_auxiliary_client, get_text_auxiliary_client, AnthropicAuxiliaryClient, AsyncAnthropicAuxiliaryClient
         async_client, async_model = get_async_text_auxiliary_client('compression')
         assert isinstance(async_client, AsyncAnthropicAuxiliaryClient)
         assert async_model == 'claude-sonnet-4.6'
@@ -239,7 +239,7 @@ class TestProvidersDictApiModeAnthropicMessages:
         """Named providers that don't declare api_mode should still go
         through the plain OpenAI-wire path (no regression)."""
         _write_config(tmp_path, {'providers': {'localchat': {'name': 'localchat', 'base_url': 'http://127.0.0.1:1234/v1', 'api_key': 'local-key', 'default_model': 'llama-3'}}})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         from openai import OpenAI, AsyncOpenAI
         sync_client, _ = resolve_provider_client('localchat', async_mode=False)
         assert isinstance(sync_client, OpenAI)
@@ -258,7 +258,7 @@ class TestCustomProviderAliasCollision:
 
     def test_custom_named_kimi_wins_over_builtin_alias(self, tmp_path):
         _write_config(tmp_path, {'model': {'provider': 'openrouter', 'default': 'anthropic/claude-sonnet-4.6'}, 'custom_providers': [{'name': 'kimi', 'base_url': 'https://my-custom-kimi.example.com/v1', 'api_key': 'my-kimi-key', 'models': {'my-kimi-model': {'context_length': 200000}}}]})
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         from openai import OpenAI
         client, model = resolve_provider_client('kimi', model='my-kimi-model', raw_codex=True)
         assert isinstance(client, OpenAI)
@@ -271,7 +271,7 @@ class TestCustomProviderAliasCollision:
         reach the built-in kimi-coding provider."""
         _write_config(tmp_path, {'model': {'provider': 'openrouter', 'default': 'anthropic/claude-sonnet-4.6'}})
         monkeypatch.setenv('KIMI_API_KEY', 'builtin-kimi-key')
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         client, _ = resolve_provider_client('kimi', model='kimi-k2-0905-preview', raw_codex=True)
         assert client is not None
         base_url = str(client.base_url)
@@ -284,7 +284,7 @@ class TestCustomProviderAliasCollision:
         provider name but targeting a user-supplied endpoint."""
         _write_config(tmp_path, {'model': {'provider': 'openrouter', 'default': 'anthropic/claude-sonnet-4.6'}})
         monkeypatch.setenv('KIMI_API_KEY', 'builtin-kimi-key')
-        from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client
+        from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client
         from openai import OpenAI
         client, _ = resolve_provider_client('kimi-coding', model='kimi-k2', raw_codex=True, explicit_base_url='https://override.example.com', explicit_api_key='override-key')
         assert isinstance(client, OpenAI)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from kylin_memory.l1_extraction import (
+from kylinmemory.l1_extraction import (
     AtomCandidate,
     OpenAICompatibleAtomExtractor,
     SemanticExtractionResponseError,

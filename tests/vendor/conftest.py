@@ -13,7 +13,7 @@ def pytest_collection_modifyitems(items):
 
 @pytest.fixture(autouse=True)
 def isolated_account_home(tmp_path, monkeypatch):
-    from kylin_memory._vendor.agent import auxiliary_client
+    from kylinmemory._vendor.agent import auxiliary_client
     auxiliary_client._reset_aux_unhealthy_cache()
     auxiliary_client.clear_runtime_main()
     auxiliary_client._client_cache.clear()

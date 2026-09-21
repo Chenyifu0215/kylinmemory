@@ -6,9 +6,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kylin_memory.user_profile.models import ProfileEntry, ProfileUpdate, UserProfile
-from kylin_memory.user_profile import InteractionMessage, OpenAICompatibleProfileExtractor
-from kylin_memory.user_profile_runtime import (
+from kylinmemory.user_profile.models import ProfileEntry, ProfileUpdate, UserProfile
+from kylinmemory.user_profile import InteractionMessage, OpenAICompatibleProfileExtractor
+from kylinmemory.user_profile_runtime import (
     RuntimeUserProfile,
     _error_summary,
     _extractor_for_agent,
@@ -16,7 +16,7 @@ from kylin_memory.user_profile_runtime import (
     commit_user_profile_session,
     initialize_user_profile,
 )
-from kylin_memory.user_profile.extractors import (
+from kylinmemory.user_profile.extractors import (
     CONSOLIDATION_INSTRUCTIONS,
     PROFILE_EXTRACTION_TOOL_NAME,
     PROFILE_PRECHECK_TOOL_NAME,
@@ -637,7 +637,7 @@ def test_layered_extractor_accepts_l1_evidence_quote(caplog):
         api_mode="chat_completions",
     )
 
-    with caplog.at_level("INFO", logger="kylin_memory.memory_debug"):
+    with caplog.at_level("INFO", logger="kylinmemory.memory_debug"):
         result = extractor.extract(
             "user",
             [
@@ -741,7 +741,7 @@ def test_runtime_observe_logs_real_extractor_call(caplog):
     service.observe.return_value = result
     runtime = RuntimeUserProfile(service, "user")
 
-    with caplog.at_level("INFO", logger="kylin_memory.user_profile_runtime"):
+    with caplog.at_level("INFO", logger="kylinmemory.user_profile_runtime"):
         assert runtime.observe([{"role": "user", "content": "叫我小王"}]) is True
 
     service.observe.assert_called_once()

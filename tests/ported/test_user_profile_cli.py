@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 from types import SimpleNamespace
 
-from kylin_memory.user_profile.cli import main
-from kylin_memory.user_profile.models import ProfileEntry
-from kylin_memory.user_profile_runtime import initialize_user_profile
+from kylinmemory.user_profile.cli import main
+from kylinmemory.user_profile.models import ProfileEntry
+from kylinmemory.user_profile_runtime import initialize_user_profile
 
 
 def _seed_profile(tmp_path, monkeypatch, *, platform="cli", platform_user_id=None):

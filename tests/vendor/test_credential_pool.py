@@ -21,7 +21,7 @@ def _jwt_with_claims(claims: dict) -> str:
 def test_fill_first_selection_skips_recently_exhausted_entry(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'anthropic': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***', 'last_status': 'exhausted', 'last_status_at': time.time(), 'last_error_code': 402}, {'id': 'cred-2', 'label': 'secondary', 'auth_type': 'api_key', 'priority': 1, 'source': 'manual', 'access_token': '***', 'last_status': 'ok', 'last_status_at': None, 'last_error_code': None}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('anthropic')
     entry = pool.select()
     assert entry is not None
@@ -31,7 +31,7 @@ def test_fill_first_selection_skips_recently_exhausted_entry(tmp_path, monkeypat
 def test_select_clears_expired_exhaustion(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'anthropic': [{'id': 'cred-1', 'label': 'old', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***', 'last_status': 'exhausted', 'last_status_at': time.time() - 90000, 'last_error_code': 402}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('anthropic')
     entry = pool.select()
     assert entry is not None
@@ -42,7 +42,7 @@ def test_round_robin_strategy_rotates_priorities(tmp_path, monkeypatch):
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***'}, {'id': 'cred-2', 'label': 'secondary', 'auth_type': 'api_key', 'priority': 1, 'source': 'manual', 'access_token': '***'}]}})
     config_path = tmp_path / 'hermes' / 'config.yaml'
     config_path.write_text('credential_pool_strategies:\n  openrouter: round_robin\n')
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     first = pool.select()
     assert first is not None
@@ -58,8 +58,8 @@ def test_random_strategy_uses_random_choice(tmp_path, monkeypatch):
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***'}, {'id': 'cred-2', 'label': 'secondary', 'auth_type': 'api_key', 'priority': 1, 'source': 'manual', 'access_token': '***'}]}})
     config_path = tmp_path / 'hermes' / 'config.yaml'
     config_path.write_text('credential_pool_strategies:\n  openrouter: random\n')
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool.random.choice', lambda entries: entries[-1])
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool.random.choice', lambda entries: entries[-1])
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     selected = pool.select()
     assert selected is not None
@@ -68,7 +68,7 @@ def test_random_strategy_uses_random_choice(tmp_path, monkeypatch):
 def test_exhausted_entry_resets_after_ttl(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': 'sk-or-primary', 'base_url': 'https://openrouter.ai/api/v1', 'last_status': 'exhausted', 'last_status_at': time.time() - 90000, 'last_error_code': 429}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -79,7 +79,7 @@ def test_exhausted_402_entry_resets_after_one_hour(tmp_path, monkeypatch):
     """402-exhausted credentials recover after 1 hour, not 24."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***', 'base_url': 'https://openrouter.ai/api/v1', 'last_status': 'exhausted', 'last_status_at': time.time() - 3700, 'last_error_code': 402}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -90,7 +90,7 @@ def test_exhausted_401_entry_resets_after_five_minutes(tmp_path, monkeypatch):
     """Transient auth failures should not strand single-key setups for an hour."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***', 'base_url': 'https://openrouter.ai/api/v1', 'last_status': 'exhausted', 'last_status_at': time.time() - 310, 'last_error_code': 401}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -99,9 +99,9 @@ def test_exhausted_401_entry_resets_after_five_minutes(tmp_path, monkeypatch):
 
 def test_explicit_reset_timestamp_overrides_default_429_ttl(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.auth._import_codex_cli_tokens', lambda: None)
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.auth._import_codex_cli_tokens', lambda: None)
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openai-codex': [{'id': 'cred-1', 'label': 'weekly-reset', 'auth_type': 'oauth', 'priority': 0, 'source': 'manual:device_code', 'access_token': 'tok-1', 'last_status': 'exhausted', 'last_status_at': time.time() - 7200, 'last_error_code': 429, 'last_error_reason': 'device_code_exhausted', 'last_error_reset_at': time.time() + 7 * 24 * 60 * 60}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openai-codex')
     assert pool.has_available() is False
     assert pool.select() is None
@@ -109,7 +109,7 @@ def test_explicit_reset_timestamp_overrides_default_429_ttl(tmp_path, monkeypatc
 def test_mark_exhausted_and_rotate_persists_status(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'anthropic': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': 'sk-ant-api-primary'}, {'id': 'cred-2', 'label': 'secondary', 'auth_type': 'api_key', 'priority': 1, 'source': 'manual', 'access_token': 'sk-ant-api-secondary'}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('anthropic')
     assert pool.select().id == 'cred-1'
     next_entry = pool.mark_exhausted_and_rotate(status_code=402)
@@ -124,7 +124,7 @@ def test_load_pool_seeds_env_api_key(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-or-seeded')
     _write_auth_store(tmp_path, {'version': 1, 'providers': {}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -144,7 +144,7 @@ def test_load_pool_prefers_dotenv_over_stale_os_environ(tmp_path, monkeypatch):
     monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-or-STALE-from-shell')
     (hermes_home / '.env').write_text('OPENROUTER_API_KEY=sk-or-FRESH-from-dotenv\n')
     _write_auth_store(tmp_path, {'version': 1, 'providers': {}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -163,7 +163,7 @@ def test_load_pool_falls_back_to_os_environ_when_dotenv_empty(tmp_path, monkeypa
     monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-or-from-runtime-env')
     (hermes_home / '.env').write_text('SOME_OTHER_VAR=unrelated\n')
     _write_auth_store(tmp_path, {'version': 1, 'providers': {}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -173,7 +173,7 @@ def test_load_pool_removes_stale_seeded_env_entry(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     monkeypatch.delenv('OPENROUTER_API_KEY', raising=False)
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'seeded-env', 'label': 'OPENROUTER_API_KEY', 'auth_type': 'api_key', 'priority': 0, 'source': 'env:OPENROUTER_API_KEY', 'access_token': 'stale-token', 'base_url': 'https://openrouter.ai/api/v1'}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     assert pool.entries() == []
     auth_payload = json.loads((tmp_path / 'hermes' / 'auth.json').read_text())
@@ -182,7 +182,7 @@ def test_load_pool_removes_stale_seeded_env_entry(tmp_path, monkeypatch):
 def test_load_pool_migrates_nous_provider_state(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'token_type': 'Bearer', 'scope': 'inference:mint_agent_key', 'access_token': 'access-token', 'refresh_token': 'refresh-token', 'expires_at': '2026-03-24T12:00:00+00:00', 'agent_key': 'agent-key', 'agent_key_expires_at': '2026-03-24T13:30:00+00:00'}}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('nous')
     entry = pool.select()
     assert entry is not None
@@ -195,7 +195,7 @@ def test_load_pool_mirrors_nous_invoke_jwt_agent_key_runtime_api_key(tmp_path, m
     expires_at = datetime.fromtimestamp(time.time() + 3600, tz=timezone.utc).isoformat()
     token = _jwt_with_claims({'sub': 'test-user', 'scope': ['inference:invoke', 'inference:mint_agent_key'], 'exp': int(time.time() + 3600)})
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'token_type': 'Bearer', 'scope': 'inference:invoke inference:mint_agent_key', 'access_token': token, 'refresh_token': 'refresh-token', 'expires_at': expires_at, 'agent_key': token, 'agent_key_expires_at': expires_at}}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('nous')
     entry = pool.select()
     assert entry is not None
@@ -211,9 +211,9 @@ def test_nous_pool_terminal_refresh_removes_device_code_entry(tmp_path, monkeypa
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     monkeypatch.setenv('HERMES_SHARED_AUTH_DIR', str(tmp_path / 'shared'))
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'token_type': 'Bearer', 'scope': 'inference:mint_agent_key', 'access_token': 'access-token', 'refresh_token': 'refresh-token', 'expires_at': '2026-03-24T12:00:00+00:00', 'agent_key': 'agent-key', 'agent_key_expires_at': '2026-03-24T13:30:00+00:00'}}})
-    from kylin_memory._vendor.agent.credential_pool import PooledCredential, load_pool
-    from kylin_memory._vendor.kylin_agent_runtime_cli import auth as auth_mod
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError
+    from kylinmemory._vendor.agent.credential_pool import PooledCredential, load_pool
+    from kylinmemory._vendor.kylin_agent_runtime_cli import auth as auth_mod
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError
     refresh_calls = {'count': 0}
 
     def _terminal_refresh_failure(*_args, **_kwargs):
@@ -241,7 +241,7 @@ def test_nous_pool_terminal_refresh_removes_device_code_entry(tmp_path, monkeypa
 def test_load_pool_removes_nous_device_code_when_singleton_quarantined(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'last_auth_error': {'code': 'invalid_grant'}}}, 'credential_pool': {'nous': [{'id': 'seeded-current', 'source': 'device_code', 'auth_type': 'oauth', 'access_token': 'stale-access', 'refresh_token': 'stale-refresh', 'agent_key': 'stale-agent'}, {'id': 'seeded-legacy', 'source': 'manual:device_code', 'auth_type': 'oauth', 'access_token': 'older-stale-access'}, {'id': 'manual-key', 'source': 'manual', 'auth_type': 'api_key', 'access_token': 'manual-nous-key'}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('nous')
     assert [entry.id for entry in pool.entries()] == ['manual-key']
     auth_payload = json.loads((tmp_path / 'hermes' / 'auth.json').read_text())
@@ -253,9 +253,9 @@ def test_load_pool_removes_stale_file_backed_singleton_entry(tmp_path, monkeypat
     monkeypatch.delenv('ANTHROPIC_TOKEN', raising=False)
     monkeypatch.delenv('CLAUDE_CODE_OAUTH_TOKEN', raising=False)
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'anthropic': [{'id': 'seeded-file', 'label': 'claude-code', 'auth_type': 'oauth', 'priority': 0, 'source': 'claude_code', 'access_token': 'stale-access-token', 'refresh_token': 'stale-refresh-token', 'expires_at_ms': int(time.time() * 1000) + 60000}]}})
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: None)
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: None)
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: None)
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: None)
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('anthropic')
     assert pool.entries() == []
     auth_payload = json.loads((tmp_path / 'hermes' / 'auth.json').read_text())
@@ -264,7 +264,7 @@ def test_load_pool_removes_stale_file_backed_singleton_entry(tmp_path, monkeypat
 def test_load_pool_migrates_nous_provider_state_preserves_tls(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'token_type': 'Bearer', 'scope': 'inference:mint_agent_key', 'access_token': 'access-token', 'refresh_token': 'refresh-token', 'expires_at': '2026-03-24T12:00:00+00:00', 'agent_key': 'agent-key', 'agent_key_expires_at': '2026-03-24T13:30:00+00:00', 'tls': {'insecure': True, 'ca_bundle': '/tmp/nous-ca.pem'}}}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('nous')
     entry = pool.select()
     assert entry is not None
@@ -277,11 +277,11 @@ def test_singleton_seed_does_not_clobber_manual_oauth_entry(tmp_path, monkeypatc
     monkeypatch.delenv('ANTHROPIC_API_KEY', raising=False)
     monkeypatch.delenv('ANTHROPIC_TOKEN', raising=False)
     monkeypatch.delenv('CLAUDE_CODE_OAUTH_TOKEN', raising=False)
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.auth.is_provider_explicitly_configured', lambda pid: True)
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.auth.is_provider_explicitly_configured', lambda pid: True)
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'anthropic': [{'id': 'manual-1', 'label': 'manual-pkce', 'auth_type': 'oauth', 'priority': 0, 'source': 'manual:hermes_pkce', 'access_token': 'manual-token', 'refresh_token': 'manual-refresh', 'expires_at_ms': 1711234567000}]}})
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: {'accessToken': 'seeded-token', 'refreshToken': 'seeded-refresh', 'expiresAt': 1711234999000})
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: None)
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: {'accessToken': 'seeded-token', 'refreshToken': 'seeded-refresh', 'expiresAt': 1711234999000})
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: None)
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('anthropic')
     entries = pool.entries()
     assert len(entries) == 2
@@ -293,9 +293,9 @@ def test_load_pool_prefers_anthropic_env_token_over_file_backed_oauth(tmp_path, 
     monkeypatch.setenv('ANTHROPIC_TOKEN', 'env-override-token')
     monkeypatch.delenv('CLAUDE_CODE_OAUTH_TOKEN', raising=False)
     _write_auth_store(tmp_path, {'version': 1, 'providers': {}})
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: {'accessToken': 'file-backed-token', 'refreshToken': 'refresh-token', 'expiresAt': int(time.time() * 1000) + 3600000})
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: None)
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: {'accessToken': 'file-backed-token', 'refreshToken': 'refresh-token', 'expiresAt': int(time.time() * 1000) + 3600000})
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: None)
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('anthropic')
     entry = pool.select()
     assert entry is not None
@@ -305,11 +305,11 @@ def test_load_pool_prefers_anthropic_env_token_over_file_backed_oauth(tmp_path, 
 def test_least_used_strategy_selects_lowest_count(tmp_path, monkeypatch):
     """least_used strategy should select the credential with the lowest request_count."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool.get_pool_strategy', lambda _provider: 'least_used')
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool._seed_from_singletons', lambda provider, entries: (False, set()))
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool._seed_from_env', lambda provider, entries: (False, set()))
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool.get_pool_strategy', lambda _provider: 'least_used')
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool._seed_from_singletons', lambda provider, entries: (False, set()))
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool._seed_from_env', lambda provider, entries: (False, set()))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'key-a', 'label': 'heavy', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': 'sk-or-heavy', 'request_count': 100}, {'id': 'key-b', 'label': 'light', 'auth_type': 'api_key', 'priority': 1, 'source': 'manual', 'access_token': 'sk-or-light', 'request_count': 10}, {'id': 'key-c', 'label': 'medium', 'auth_type': 'api_key', 'priority': 2, 'source': 'manual', 'access_token': 'sk-or-medium', 'request_count': 50}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -320,11 +320,11 @@ def test_thread_safety_concurrent_select(tmp_path, monkeypatch):
     """Concurrent select() calls should not corrupt pool state."""
     import threading as _threading
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool.get_pool_strategy', lambda _provider: 'round_robin')
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool._seed_from_singletons', lambda provider, entries: (False, set()))
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool._seed_from_env', lambda provider, entries: (False, set()))
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool.get_pool_strategy', lambda _provider: 'round_robin')
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool._seed_from_singletons', lambda provider, entries: (False, set()))
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool._seed_from_env', lambda provider, entries: (False, set()))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': f'key-{i}', 'label': f'key-{i}', 'auth_type': 'api_key', 'priority': i, 'source': 'manual', 'access_token': f'sk-or-{i}'} for i in range(5)]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     results = []
     errors = []
@@ -348,9 +348,9 @@ def test_thread_safety_concurrent_select(tmp_path, monkeypatch):
 def test_custom_endpoint_pool_keyed_by_name(tmp_path, monkeypatch):
     """Verify load_pool('custom:together.ai') works and returns entries from auth.json."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
-    monkeypatch.setattr('kylin_memory._vendor.agent.credential_pool._seed_custom_pool', lambda pool_key, entries: (False, set()))
+    monkeypatch.setattr('kylinmemory._vendor.agent.credential_pool._seed_custom_pool', lambda pool_key, entries: (False, set()))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'custom:together.ai': [{'id': 'cred-1', 'label': 'together-key', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': 'sk-together-xxx', 'base_url': 'https://api.together.ai/v1'}, {'id': 'cred-2', 'label': 'together-key-2', 'auth_type': 'api_key', 'priority': 1, 'source': 'manual', 'access_token': 'sk-together-yyy', 'base_url': 'https://api.together.ai/v1'}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('custom:together.ai')
     assert pool.has_credentials()
     entries = pool.entries()
@@ -368,7 +368,7 @@ def test_custom_endpoint_pool_seeds_from_config(tmp_path, monkeypatch):
     config_path = tmp_path / 'hermes' / 'config.yaml'
     import yaml
     config_path.write_text(yaml.dump({'custom_providers': [{'name': 'Together.ai', 'base_url': 'https://api.together.ai/v1', 'api_key': 'sk-config-seeded'}]}))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('custom:together.ai')
     assert pool.has_credentials()
     entries = pool.entries()
@@ -383,7 +383,7 @@ def test_custom_endpoint_pool_seeds_from_model_config(tmp_path, monkeypatch):
     import yaml
     config_path = tmp_path / 'hermes' / 'config.yaml'
     config_path.write_text(yaml.dump({'custom_providers': [{'name': 'Together.ai', 'base_url': 'https://api.together.ai/v1'}], 'model': {'provider': 'custom', 'base_url': 'https://api.together.ai/v1', 'api_key': 'sk-model-key'}}))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('custom:together.ai')
     assert pool.has_credentials()
     entries = pool.entries()
@@ -396,7 +396,7 @@ def test_custom_pool_does_not_break_existing_providers(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-or-test')
     _write_auth_store(tmp_path, {'version': 1, 'providers': {}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     entry = pool.select()
     assert entry is not None
@@ -410,7 +410,7 @@ def test_get_custom_provider_pool_key(tmp_path, monkeypatch):
     import yaml
     config_path = tmp_path / 'hermes' / 'config.yaml'
     config_path.write_text(yaml.dump({'custom_providers': [{'name': 'Together.ai', 'base_url': 'https://api.together.ai/v1', 'api_key': 'sk-xxx'}, {'name': 'My Local Server', 'base_url': 'http://localhost:8080/v1'}]}))
-    from kylin_memory._vendor.agent.credential_pool import get_custom_provider_pool_key
+    from kylinmemory._vendor.agent.credential_pool import get_custom_provider_pool_key
     assert get_custom_provider_pool_key('https://api.together.ai/v1') == 'custom:together.ai'
     assert get_custom_provider_pool_key('https://api.together.ai/v1/') == 'custom:together.ai'
     assert get_custom_provider_pool_key('http://localhost:8080/v1') == 'custom:my-local-server'
@@ -424,7 +424,7 @@ def test_get_custom_provider_pool_key_prefers_name_over_base_url(tmp_path, monke
     import yaml
     config_path = tmp_path / 'hermes' / 'config.yaml'
     config_path.write_text(yaml.dump({'custom_providers': [{'name': 'provider-a', 'base_url': 'http://gateway:8080/v1', 'api_key': 'sk-aaa'}, {'name': 'provider-b', 'base_url': 'http://gateway:8080/v1', 'api_key': 'sk-bbb'}]}))
-    from kylin_memory._vendor.agent.credential_pool import get_custom_provider_pool_key
+    from kylinmemory._vendor.agent.credential_pool import get_custom_provider_pool_key
     assert get_custom_provider_pool_key('http://gateway:8080/v1') == 'custom:provider-a'
     assert get_custom_provider_pool_key('http://gateway:8080/v1', provider_name='provider-b') == 'custom:provider-b'
     assert get_custom_provider_pool_key('http://gateway:8080/v1', provider_name='provider-a') == 'custom:provider-a'
@@ -435,14 +435,14 @@ def test_list_custom_pool_providers(tmp_path, monkeypatch):
     """list_custom_pool_providers returns custom: pool keys from auth.json."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'anthropic': [{'id': 'a1', 'label': 'test', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***'}], 'custom:together.ai': [{'id': 'c1', 'label': 'together', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***'}], 'custom:fireworks': [{'id': 'c2', 'label': 'fireworks', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***'}], 'custom:empty': []}})
-    from kylin_memory._vendor.agent.credential_pool import list_custom_pool_providers
+    from kylinmemory._vendor.agent.credential_pool import list_custom_pool_providers
     result = list_custom_pool_providers()
     assert result == ['custom:fireworks', 'custom:together.ai']
 
 def test_acquire_lease_prefers_unleased_entry(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***'}, {'id': 'cred-2', 'label': 'secondary', 'auth_type': 'api_key', 'priority': 1, 'source': 'manual', 'access_token': '***'}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     first = pool.acquire_lease()
     second = pool.acquire_lease()
@@ -454,7 +454,7 @@ def test_acquire_lease_prefers_unleased_entry(tmp_path, monkeypatch):
 def test_release_lease_decrements_counter(tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {'openrouter': [{'id': 'cred-1', 'label': 'primary', 'auth_type': 'api_key', 'priority': 0, 'source': 'manual', 'access_token': '***'}]}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openrouter')
     leased = pool.acquire_lease()
     assert leased == 'cred-1'
@@ -466,10 +466,10 @@ def test_load_pool_does_not_seed_claude_code_when_anthropic_not_configured(tmp_p
     """Claude Code credentials must not be auto-seeded when the user never selected anthropic."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {}})
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: {'accessToken': 'sk-ant...oken', 'refreshToken': 'rt', 'expiresAt': 9999999999999})
-    monkeypatch.setattr('kylin_memory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: None)
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.auth.is_provider_explicitly_configured', lambda pid: pid == 'kimi-coding')
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_claude_code_credentials', lambda: {'accessToken': 'sk-ant...oken', 'refreshToken': 'rt', 'expiresAt': 9999999999999})
+    monkeypatch.setattr('kylinmemory._vendor.agent.anthropic_adapter.read_hermes_oauth_credentials', lambda: None)
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.auth.is_provider_explicitly_configured', lambda pid: pid == 'kimi-coding')
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('anthropic')
     assert pool.entries() == []
 
@@ -477,8 +477,8 @@ def test_load_pool_seeds_copilot_via_gh_auth_token(tmp_path, monkeypatch):
     """Copilot credentials from `gh auth token` should be seeded into the pool."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {}})
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.copilot_auth.resolve_copilot_token', lambda: ('gho_fake_token_abc123', 'gh auth token'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.copilot_auth.resolve_copilot_token', lambda: ('gho_fake_token_abc123', 'gh auth token'))
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('copilot')
     assert pool.has_credentials()
     entries = pool.entries()
@@ -491,8 +491,8 @@ def test_load_pool_does_not_seed_copilot_when_no_token(tmp_path, monkeypatch):
     """Copilot pool should be empty when resolve_copilot_token() returns nothing."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {}})
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.copilot_auth.resolve_copilot_token', lambda: ('', ''))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.copilot_auth.resolve_copilot_token', lambda: ('', ''))
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('copilot')
     assert not pool.has_credentials()
     assert pool.entries() == []
@@ -501,8 +501,8 @@ def test_load_pool_seeds_qwen_oauth_via_cli_tokens(tmp_path, monkeypatch):
     """Qwen OAuth credentials from ~/.qwen/oauth_creds.json should be seeded into the pool."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {}})
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_qwen_runtime_credentials', lambda **kw: {'provider': 'qwen-oauth', 'base_url': 'https://portal.qwen.ai/v1', 'api_key': 'qwen_fake_token_xyz', 'source': 'qwen-cli', 'expires_at_ms': 1900000000000, 'auth_file': str(tmp_path / '.qwen' / 'oauth_creds.json')})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_qwen_runtime_credentials', lambda **kw: {'provider': 'qwen-oauth', 'base_url': 'https://portal.qwen.ai/v1', 'api_key': 'qwen_fake_token_xyz', 'source': 'qwen-cli', 'expires_at_ms': 1900000000000, 'auth_file': str(tmp_path / '.qwen' / 'oauth_creds.json')})
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('qwen-oauth')
     assert pool.has_credentials()
     entries = pool.entries()
@@ -514,9 +514,9 @@ def test_load_pool_does_not_seed_qwen_oauth_when_no_token(tmp_path, monkeypatch)
     """Qwen OAuth pool should be empty when no CLI credentials exist."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'credential_pool': {}})
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError
-    monkeypatch.setattr('kylin_memory._vendor.kylin_agent_runtime_cli.auth.resolve_qwen_runtime_credentials', lambda **kw: (_ for _ in ()).throw(AuthError('Qwen CLI credentials not found.', provider='qwen-oauth', code='qwen_auth_missing')))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError
+    monkeypatch.setattr('kylinmemory._vendor.kylin_agent_runtime_cli.auth.resolve_qwen_runtime_credentials', lambda **kw: (_ for _ in ()).throw(AuthError('Qwen CLI credentials not found.', provider='qwen-oauth', code='qwen_auth_missing')))
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('qwen-oauth')
     assert not pool.has_credentials()
     assert pool.entries() == []
@@ -533,7 +533,7 @@ def test_nous_seed_from_singletons_preserves_obtained_at_timestamps(tmp_path, mo
     """
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'providers': {'nous': {'access_token': 'at_XXXXXXXX', 'refresh_token': 'rt_YYYYYYYY', 'client_id': 'hermes-cli', 'portal_base_url': 'https://portal.nousresearch.com', 'inference_base_url': 'https://inference.nousresearch.com/v1', 'token_type': 'Bearer', 'scope': 'openid profile', 'obtained_at': '2026-04-24T10:00:00+00:00', 'expires_at': '2026-04-24T11:00:00+00:00', 'expires_in': 3600, 'agent_key': 'sk-nous-AAAA', 'agent_key_id': 'ak_123', 'agent_key_expires_at': '2026-04-25T10:00:00+00:00', 'agent_key_expires_in': 86400, 'agent_key_reused': False, 'agent_key_obtained_at': '2026-04-24T10:00:05+00:00', 'tls': {'insecure': False, 'ca_bundle': None}}}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('nous')
     entries = pool.entries()
     device_entries = [e for e in entries if e.source == 'device_code']
@@ -557,9 +557,9 @@ class TestLeastUsedStrategy:
     def test_request_count_increments(self):
         """Each select() call should increment the chosen entry's request_count."""
         from unittest.mock import patch as _patch
-        from kylin_memory._vendor.agent.credential_pool import CredentialPool, PooledCredential, STRATEGY_LEAST_USED
+        from kylinmemory._vendor.agent.credential_pool import CredentialPool, PooledCredential, STRATEGY_LEAST_USED
         entries = [PooledCredential(provider='test', id='a', label='a', auth_type='api_key', source='a', access_token='tok-a', priority=0, request_count=0), PooledCredential(provider='test', id='b', label='b', auth_type='api_key', source='b', access_token='tok-b', priority=1, request_count=0)]
-        with _patch('kylin_memory._vendor.agent.credential_pool.get_pool_strategy', return_value=STRATEGY_LEAST_USED):
+        with _patch('kylinmemory._vendor.agent.credential_pool.get_pool_strategy', return_value=STRATEGY_LEAST_USED):
             pool = CredentialPool('test', entries)
         e1 = pool.select()
         assert e1 is not None
@@ -573,7 +573,7 @@ def test_sync_nous_entry_from_auth_store_adopts_newer_tokens(tmp_path, monkeypat
     """When auth.json has a newer refresh token, the pool entry should adopt it."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'token_type': 'Bearer', 'scope': 'inference:mint_agent_key', 'access_token': 'access-OLD', 'refresh_token': 'refresh-OLD', 'expires_at': '2026-03-24T12:00:00+00:00', 'agent_key': 'agent-key-OLD', 'agent_key_expires_at': '2026-03-24T13:30:00+00:00'}}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('nous')
     entry = pool.select()
     assert entry is not None
@@ -590,7 +590,7 @@ def test_sync_nous_entry_noop_when_tokens_match(tmp_path, monkeypatch):
     """When auth.json has the same refresh token, sync should be a no-op."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'token_type': 'Bearer', 'scope': 'inference:mint_agent_key', 'access_token': 'access-token', 'refresh_token': 'refresh-token', 'expires_at': '2026-03-24T12:00:00+00:00', 'agent_key': 'agent-key', 'agent_key_expires_at': '2026-03-24T13:30:00+00:00'}}})
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('nous')
     entry = pool.select()
     assert entry is not None
@@ -600,7 +600,7 @@ def test_sync_nous_entry_noop_when_tokens_match(tmp_path, monkeypatch):
 def test_nous_exhausted_entry_recovers_via_auth_store_sync(tmp_path, monkeypatch):
     """An exhausted Nous entry should recover when auth.json has newer tokens."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool, STATUS_EXHAUSTED
+    from kylinmemory._vendor.agent.credential_pool import load_pool, STATUS_EXHAUSTED
     from dataclasses import replace as dc_replace
     _write_auth_store(tmp_path, {'version': 1, 'active_provider': 'nous', 'providers': {'nous': {'portal_base_url': 'https://portal.example.com', 'inference_base_url': 'https://inference.example.com/v1', 'client_id': 'hermes-cli', 'token_type': 'Bearer', 'scope': 'inference:mint_agent_key', 'access_token': 'access-OLD', 'refresh_token': 'refresh-OLD', 'expires_at': '2026-03-24T12:00:00+00:00', 'agent_key': 'agent-key', 'agent_key_expires_at': '2026-03-24T13:30:00+00:00'}}})
     pool = load_pool('nous')
@@ -622,7 +622,7 @@ def test_sync_codex_entry_from_auth_store_adopts_newer_tokens(tmp_path, monkeypa
     """When auth.json has newer Codex tokens, the pool entry should adopt them."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, _codex_auth_store('access-OLD', 'refresh-OLD'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openai-codex')
     entry = pool.select()
     assert entry is not None
@@ -641,7 +641,7 @@ def test_sync_codex_entry_noop_when_tokens_match(tmp_path, monkeypatch):
     """When auth.json has the same tokens, sync should be a no-op."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
     _write_auth_store(tmp_path, _codex_auth_store('access-same', 'refresh-same'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
+    from kylinmemory._vendor.agent.credential_pool import load_pool
     pool = load_pool('openai-codex')
     entry = pool.select()
     assert entry is not None
@@ -658,7 +658,7 @@ def test_codex_exhausted_entry_recovers_via_auth_store_sync(tmp_path, monkeypatc
     request failed with "no available entries (all exhausted or empty)".
     """
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool, STATUS_EXHAUSTED
+    from kylinmemory._vendor.agent.credential_pool import load_pool, STATUS_EXHAUSTED
     from dataclasses import replace as dc_replace
     _write_auth_store(tmp_path, _codex_auth_store('access-OLD', 'refresh-OLD'))
     pool = load_pool('openai-codex')
@@ -683,7 +683,7 @@ def test_codex_exhausted_entry_stays_stuck_without_auth_store_update(tmp_path, m
     entry must stay stuck behind its reset window — sync must not spuriously
     clear status just because the entry is STATUS_EXHAUSTED."""
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'hermes'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool, STATUS_EXHAUSTED
+    from kylinmemory._vendor.agent.credential_pool import load_pool, STATUS_EXHAUSTED
     from dataclasses import replace as dc_replace
     _write_auth_store(tmp_path, _codex_auth_store('access-same', 'refresh-same'))
     pool = load_pool('openai-codex')
@@ -700,7 +700,7 @@ def _xai_auth_store(access_token: str, refresh_token: str) -> dict:
     return {'version': 1, 'active_provider': 'xai-oauth', 'providers': {'xai-oauth': {'tokens': {'access_token': access_token, 'refresh_token': refresh_token}, 'discovery': {'token_endpoint': 'https://accounts.x.ai/oauth2/token'}, 'redirect_uri': 'http://localhost:12345/callback'}}}
 
 def test_is_terminal_xai_oauth_refresh_error():
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError, _is_terminal_xai_oauth_refresh_error
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError, _is_terminal_xai_oauth_refresh_error
     assert _is_terminal_xai_oauth_refresh_error(AuthError('Refresh failed', provider='xai-oauth', code='xai_refresh_failed', relogin_required=True))
     assert _is_terminal_xai_oauth_refresh_error(AuthError('No token', provider='xai-oauth', code='xai_auth_missing_refresh_token', relogin_required=True))
     assert not _is_terminal_xai_oauth_refresh_error(AuthError('Rate limit', provider='xai-oauth', code='xai_refresh_failed', relogin_required=False))
@@ -712,9 +712,9 @@ def test_xai_oauth_terminal_refresh_clears_auth_json_and_removes_pool_entries(tm
     monkeypatch.delenv('XAI_API_KEY', raising=False)
     monkeypatch.delenv('XAI_OAUTH_ACCESS_TOKEN', raising=False)
     _write_auth_store(tmp_path, _xai_auth_store('old-access-token', 'old-refresh-token'))
-    from kylin_memory._vendor.agent.credential_pool import PooledCredential, load_pool
-    import kylin_memory._vendor.kylin_agent_runtime_cli.auth as auth_mod
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError
+    from kylinmemory._vendor.agent.credential_pool import PooledCredential, load_pool
+    import kylinmemory._vendor.kylin_agent_runtime_cli.auth as auth_mod
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError
     pool = load_pool('xai-oauth')
     selected = pool.select()
     assert selected is not None
@@ -744,9 +744,9 @@ def test_xai_oauth_nonterminal_refresh_does_not_quarantine(tmp_path, monkeypatch
     monkeypatch.delenv('XAI_API_KEY', raising=False)
     monkeypatch.delenv('XAI_OAUTH_ACCESS_TOKEN', raising=False)
     _write_auth_store(tmp_path, _xai_auth_store('old-access-token', 'old-refresh-token'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
-    import kylin_memory._vendor.kylin_agent_runtime_cli.auth as auth_mod
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError
+    from kylinmemory._vendor.agent.credential_pool import load_pool
+    import kylinmemory._vendor.kylin_agent_runtime_cli.auth as auth_mod
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError
     pool = load_pool('xai-oauth')
     assert pool.select() is not None
 
@@ -763,7 +763,7 @@ def _codex_auth_store(access_token: str, refresh_token: str) -> dict:
     return {'version': 1, 'active_provider': 'openai-codex', 'providers': {'openai-codex': {'tokens': {'access_token': access_token, 'refresh_token': refresh_token}}}}
 
 def test_is_terminal_codex_oauth_refresh_error():
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError, _is_terminal_codex_oauth_refresh_error
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError, _is_terminal_codex_oauth_refresh_error
     assert _is_terminal_codex_oauth_refresh_error(AuthError('Refresh failed', provider='openai-codex', code='codex_refresh_failed', relogin_required=True))
     assert _is_terminal_codex_oauth_refresh_error(AuthError('No token', provider='openai-codex', code='codex_auth_missing_refresh_token', relogin_required=True))
     assert _is_terminal_codex_oauth_refresh_error(AuthError('Revoked', provider='openai-codex', code='invalid_grant', relogin_required=True))
@@ -777,9 +777,9 @@ def test_codex_oauth_terminal_refresh_clears_auth_json_and_removes_pool_entries(
     monkeypatch.delenv('OPENAI_API_KEY', raising=False)
     monkeypatch.delenv('CODEX_OAUTH_ACCESS_TOKEN', raising=False)
     _write_auth_store(tmp_path, _codex_auth_store('old-access-token', 'old-refresh-token'))
-    from kylin_memory._vendor.agent.credential_pool import PooledCredential, load_pool
-    import kylin_memory._vendor.kylin_agent_runtime_cli.auth as auth_mod
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError
+    from kylinmemory._vendor.agent.credential_pool import PooledCredential, load_pool
+    import kylinmemory._vendor.kylin_agent_runtime_cli.auth as auth_mod
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError
     pool = load_pool('openai-codex')
     selected = pool.select()
     assert selected is not None
@@ -809,9 +809,9 @@ def test_codex_oauth_nonterminal_refresh_does_not_quarantine(tmp_path, monkeypat
     monkeypatch.delenv('OPENAI_API_KEY', raising=False)
     monkeypatch.delenv('CODEX_OAUTH_ACCESS_TOKEN', raising=False)
     _write_auth_store(tmp_path, _codex_auth_store('old-access-token', 'old-refresh-token'))
-    from kylin_memory._vendor.agent.credential_pool import load_pool
-    import kylin_memory._vendor.kylin_agent_runtime_cli.auth as auth_mod
-    from kylin_memory._vendor.kylin_agent_runtime_cli.auth import AuthError
+    from kylinmemory._vendor.agent.credential_pool import load_pool
+    import kylinmemory._vendor.kylin_agent_runtime_cli.auth as auth_mod
+    from kylinmemory._vendor.kylin_agent_runtime_cli.auth import AuthError
     pool = load_pool('openai-codex')
     assert pool.select() is not None
 

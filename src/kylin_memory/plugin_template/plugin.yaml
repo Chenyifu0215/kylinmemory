@@ -1,4 +1,0 @@
-name: layered_memory
-version: 0.2.0
-kind: memory
-description: Standalone Kylin L0/L1/L2/L3 memory.

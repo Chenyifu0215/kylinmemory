@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-from kylin_memory.memory_manager import MemoryManager
-from kylin_memory.memory_provider import MemoryProvider
+from kylinmemory.memory_manager import MemoryManager
+from kylinmemory.memory_provider import MemoryProvider
 
 
 class _RecordingProvider(MemoryProvider):

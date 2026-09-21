@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kylin_memory.l1_memory_provider import AtomMemoryProvider
-from kylin_memory.l0_recorder import L0Recorder
-from kylin_memory.memory_pipeline import MemoryPipelineManager
-from kylin_memory.state import MemoryDB, SessionDB
+from kylinmemory.l1_memory_provider import AtomMemoryProvider
+from kylinmemory.l0_recorder import L0Recorder
+from kylinmemory.memory_pipeline import MemoryPipelineManager
+from kylinmemory.state import MemoryDB, SessionDB
 
 
 def test_l0_capture_is_incremental_sanitized_sqlite_without_fts_or_vectors(tmp_path):

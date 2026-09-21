@@ -1,5 +1,5 @@
 from __future__ import annotations
-from kylin_memory._vendor.agent.auxiliary_client import call_llm
+from kylinmemory._vendor.agent.auxiliary_client import call_llm
 
 import json
 from types import SimpleNamespace
@@ -7,31 +7,31 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kylin_memory.anthropic_adapter import build_anthropic_kwargs
-from kylin_memory.l1_extraction import (
+from kylinmemory.anthropic_adapter import build_anthropic_kwargs
+from kylinmemory.l1_extraction import (
     L1_EXTRACTION_TOOL_NAME,
     OpenAICompatibleAtomExtractor,
     SemanticExtractionResponseError,
     _l1_extraction_tool,
 )
-from kylin_memory.auxiliary_client import (
+from kylinmemory.auxiliary_client import (
     _build_call_kwargs,
     _CodexCompletionsAdapter,
     extract_tool_call_arguments,
 )
-from kylin_memory.l2_extraction import (
+from kylinmemory.l2_extraction import (
     L2_SCENE_TOOL,
     L2_SCENE_TOOL_NAME,
     OpenAICompatibleSceneConsolidator,
 )
-from kylin_memory.memory_layers import Atom, ScenarioStore
-from kylin_memory.memory_prompts import (
+from kylinmemory.memory_layers import Atom, ScenarioStore
+from kylinmemory.memory_prompts import (
     CONFLICT_DETECTION_SYSTEM_PROMPT,
     EXTRACT_MEMORIES_SYSTEM_PROMPT,
     EXTRACT_WORK_MEMORIES_SYSTEM_PROMPT,
     WORK_CONFLICT_DETECTION_SYSTEM_PROMPT,
 )
-from kylin_memory.memory_pipeline import (
+from kylinmemory.memory_pipeline import (
     _L1_CONFLICT_TOOL_NAME,
     MemoryPipelineManager,
     _l1_conflict_tool,
@@ -91,8 +91,8 @@ def test_l1_extractor_requests_and_consumes_required_tool_call(caplog):
         }],
     })
     extractor = OpenAICompatibleAtomExtractor(max_attempts=1)
-    with caplog.at_level("INFO", logger="kylin_memory.memory_debug"):
-        with patch("kylin_memory.auxiliary_client.call_llm", return_value=response) as call:
+    with caplog.at_level("INFO", logger="kylinmemory.memory_debug"):
+        with patch("kylinmemory.auxiliary_client.call_llm", return_value=response) as call:
             result = extractor.extract(
                 [{"id": 1, "role": "user", "content": "我喜欢数学"}],
                 session_id="session-l1",
@@ -133,7 +133,7 @@ def test_l1_extractor_rejects_text_json_without_tool_call():
     response = _text_response('{"scenes": []}')
     extractor = OpenAICompatibleAtomExtractor(max_attempts=1)
 
-    with patch("kylin_memory.auxiliary_client.call_llm", return_value=response):
+    with patch("kylinmemory.auxiliary_client.call_llm", return_value=response):
         with pytest.raises(SemanticExtractionResponseError) as exc_info:
             extractor.extract([{"id": 1, "role": "user", "content": "我喜欢数学"}])
 
@@ -144,7 +144,7 @@ def test_l1_extractor_rejects_tool_arguments_without_scenes_array():
     extractor = OpenAICompatibleAtomExtractor(max_attempts=1)
 
     with patch(
-        "kylin_memory.auxiliary_client.call_llm",
+        "kylinmemory.auxiliary_client.call_llm",
         return_value=_response(L1_EXTRACTION_TOOL_NAME, {"scenes": {}}),
     ):
         with pytest.raises(SemanticExtractionResponseError) as exc_info:
@@ -331,8 +331,8 @@ def test_l2_consolidator_requests_and_consumes_required_tool_call(tmp_path, capl
         "delete_files": [],
     })
     consolidator = OpenAICompatibleSceneConsolidator()
-    with caplog.at_level("INFO", logger="kylin_memory.memory_debug"):
-        with patch("kylin_memory.auxiliary_client.call_llm", return_value=response) as call:
+    with caplog.at_level("INFO", logger="kylinmemory.memory_debug"):
+        with patch("kylinmemory.auxiliary_client.call_llm", return_value=response) as call:
             result = consolidator(
                 [atom],
                 store=store,
@@ -387,7 +387,7 @@ def test_l2_prompt_uses_atomic_transaction_contract_and_includes_scene_content(t
         "delete_files": [],
     })
 
-    with patch("kylin_memory.auxiliary_client.call_llm", return_value=response) as call:
+    with patch("kylinmemory.auxiliary_client.call_llm", return_value=response) as call:
         result = OpenAICompatibleSceneConsolidator()(
             [atom], store=store, scene_name="学习偏好",
         )
@@ -420,7 +420,7 @@ def test_l2_code_prompt_preserves_work_method_scene_contract(tmp_path):
         "delete_files": [],
     })
 
-    with patch("kylin_memory.auxiliary_client.call_llm", return_value=response) as call:
+    with patch("kylinmemory.auxiliary_client.call_llm", return_value=response) as call:
         OpenAICompatibleSceneConsolidator()(
             [atom], store=store, scene_name="测试方法", mode="code",
         )
@@ -453,7 +453,7 @@ def test_l2_merge_tool_call_must_delete_every_target(tmp_path):
         "delete_files": files[:1],
     })
 
-    with patch("kylin_memory.auxiliary_client.call_llm", return_value=response):
+    with patch("kylinmemory.auxiliary_client.call_llm", return_value=response):
         with pytest.raises(ValueError, match="must delete every target"):
             OpenAICompatibleSceneConsolidator()(
                 [atom], store=store, scene_name="理科学习",
@@ -473,7 +473,7 @@ def test_l2_create_tool_call_is_deferred_to_store_capacity_policy(tmp_path):
         "delete_files": [],
     })
 
-    with patch("kylin_memory.auxiliary_client.call_llm", return_value=response):
+    with patch("kylinmemory.auxiliary_client.call_llm", return_value=response):
         result = OpenAICompatibleSceneConsolidator()(
             [atom], store=store, scene_name="物理学习",
         )
@@ -493,7 +493,7 @@ def test_l2_tool_call_rejects_noncanonical_scene_body(tmp_path, body):
         "summary": "学习偏好", "body": body, "delete_files": [],
     })
 
-    with patch("kylin_memory.auxiliary_client.call_llm", return_value=response):
+    with patch("kylinmemory.auxiliary_client.call_llm", return_value=response):
         with pytest.raises(ValueError, match="no usable scene markdown"):
             OpenAICompatibleSceneConsolidator()(
                 [_atom("a1", "用户喜欢数学。")],
@@ -513,7 +513,7 @@ def test_l2_consolidator_rejects_text_json_without_tool_call(tmp_path):
         "delete_files": [],
     }))
 
-    with patch("kylin_memory.auxiliary_client.call_llm", return_value=response):
+    with patch("kylinmemory.auxiliary_client.call_llm", return_value=response):
         with pytest.raises(ValueError, match="no valid l2_scene_transaction tool call"):
             OpenAICompatibleSceneConsolidator()(
                 [_atom("a1", "用户喜欢数学。")],
@@ -603,11 +603,11 @@ def test_call_llm_retries_deepseek_tool_choice_error_with_thinking_disabled():
 
     with (
         patch(
-            "kylin_memory._vendor.agent.auxiliary_client._resolve_task_provider_model",
+            "kylinmemory._vendor.agent.auxiliary_client._resolve_task_provider_model",
             return_value=("custom", "deepseek-v4-flash", "https://llm.example/v1", None, None),
         ),
         patch(
-            "kylin_memory._vendor.agent.auxiliary_client._get_cached_client",
+            "kylinmemory._vendor.agent.auxiliary_client._get_cached_client",
             return_value=(client, "deepseek-v4-flash"),
         ),
     ):
@@ -733,7 +733,7 @@ def test_l1_conflict_resolver_requests_and_consumes_tool_call(tmp_path):
     })
 
     try:
-        with patch("kylin_memory.auxiliary_client.call_llm", return_value=response) as call:
+        with patch("kylinmemory.auxiliary_client.call_llm", return_value=response) as call:
             decisions = manager._resolve_conflicts(
                 [(new_atom, [old_atom])],
                 mode="chat",
@@ -771,7 +771,7 @@ def test_l1_conflict_resolver_ignores_text_json_and_stores_all(tmp_path):
     }))
 
     try:
-        with patch("kylin_memory.auxiliary_client.call_llm", return_value=response):
+        with patch("kylinmemory.auxiliary_client.call_llm", return_value=response):
             decisions = manager._resolve_conflicts(
                 [(new_atom, [old_atom])],
                 mode="chat",

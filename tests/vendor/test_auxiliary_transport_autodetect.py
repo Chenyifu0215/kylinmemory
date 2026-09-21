@@ -22,30 +22,30 @@ def _clean_env(monkeypatch):
 
 @pytest.mark.parametrize('url,expected,label', [('https://api.kimi.com/coding/v1', True, 'Kimi Coding Plan /v1'), ('https://api.kimi.com/coding', True, 'Kimi Coding Plan no /v1'), ('https://api.moonshot.ai/v1', False, 'Moonshot legacy'), ('https://api.minimax.io/anthropic', True, 'MiniMax /anthropic'), ('https://litellm.example.com/v1/anthropic', True, '/anthropic suffix'), ('https://api.anthropic.com', True, 'native Anthropic'), ('https://api.anthropic.com/v1', True, 'native Anthropic /v1'), ('https://openrouter.ai/api/v1', False, 'OpenRouter'), ('https://api.openai.com/v1', False, 'OpenAI'), ('https://inference-api.nousresearch.com/v1', False, 'Nous'), ('', False, 'empty'), (None, False, 'None')])
 def test_endpoint_speaks_anthropic_messages(url, expected, label):
-    from kylin_memory._vendor.agent.auxiliary_client import _endpoint_speaks_anthropic_messages
+    from kylinmemory._vendor.agent.auxiliary_client import _endpoint_speaks_anthropic_messages
     assert _endpoint_speaks_anthropic_messages(url) is expected, f'{label}: {url!r} should be {expected}'
 
 def test_maybe_wrap_anthropic_rewraps_kimi_coding_url():
     """Plain OpenAI client pointed at api.kimi.com/coding gets rewrapped."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
     plain_client = MagicMock(name='plain_openai')
     fake_anthropic = MagicMock(name='anthropic_sdk_client')
-    with patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_anthropic):
+    with patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_anthropic):
         result = _maybe_wrap_anthropic(plain_client, 'kimi-for-coding', 'sk-kimi-test', 'https://api.kimi.com/coding', api_mode=None)
     assert isinstance(result, AnthropicAuxiliaryClient)
 
 def test_maybe_wrap_anthropic_rewraps_slash_anthropic_url():
     """Plain OpenAI client pointed at any /anthropic URL gets rewrapped."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
     plain_client = MagicMock(name='plain_openai')
     fake_anthropic = MagicMock(name='anthropic_sdk_client')
-    with patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_anthropic):
+    with patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_anthropic):
         result = _maybe_wrap_anthropic(plain_client, 'MiniMax-M2.7', 'mm-key', 'https://api.minimax.io/anthropic', api_mode=None)
     assert isinstance(result, AnthropicAuxiliaryClient)
 
 def test_maybe_wrap_anthropic_skips_openai_wire_urls():
     """OpenRouter / OpenAI / Moonshot-legacy stay as plain OpenAI clients."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
     plain_client = MagicMock(name='plain_openai')
     result = _maybe_wrap_anthropic(plain_client, 'claude-sonnet-4.6', 'sk-or-test', 'https://openrouter.ai/api/v1', api_mode=None)
     assert result is plain_client
@@ -53,7 +53,7 @@ def test_maybe_wrap_anthropic_skips_openai_wire_urls():
 
 def test_maybe_wrap_anthropic_respects_explicit_chat_completions():
     """api_mode=chat_completions overrides URL heuristics."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
     plain_client = MagicMock(name='plain_openai')
     result = _maybe_wrap_anthropic(plain_client, 'kimi-for-coding', 'sk-kimi-test', 'https://api.kimi.com/coding', api_mode='chat_completions')
     assert result is plain_client, 'Explicit chat_completions must bypass wrap'
@@ -61,23 +61,23 @@ def test_maybe_wrap_anthropic_respects_explicit_chat_completions():
 
 def test_maybe_wrap_anthropic_honors_explicit_anthropic_messages():
     """api_mode=anthropic_messages wraps even when URL wouldn't trigger."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
     plain_client = MagicMock(name='plain_openai')
     fake_anthropic = MagicMock(name='anthropic_sdk_client')
-    with patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_anthropic):
+    with patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', return_value=fake_anthropic):
         result = _maybe_wrap_anthropic(plain_client, 'model-name', 'some-key', 'https://opaque.internal/v1', api_mode='anthropic_messages')
     assert isinstance(result, AnthropicAuxiliaryClient)
 
 def test_maybe_wrap_anthropic_double_wrap_safe():
     """Already-wrapped AnthropicAuxiliaryClient passes through unchanged."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
     already_wrapped = MagicMock(spec=AnthropicAuxiliaryClient)
     result = _maybe_wrap_anthropic(already_wrapped, 'model', 'key', 'https://api.kimi.com/coding', api_mode=None)
     assert result is already_wrapped
 
 def test_maybe_wrap_anthropic_codex_client_passes_through():
     """CodexAuxiliaryClient is never re-dispatched."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, CodexAuxiliaryClient, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, CodexAuxiliaryClient, AnthropicAuxiliaryClient
     codex_client = MagicMock(spec=CodexAuxiliaryClient)
     result = _maybe_wrap_anthropic(codex_client, 'model', 'key', 'https://api.kimi.com/coding', api_mode=None)
     assert result is codex_client
@@ -85,22 +85,22 @@ def test_maybe_wrap_anthropic_codex_client_passes_through():
 
 def test_maybe_wrap_anthropic_sdk_missing_falls_back():
     """ImportError on anthropic SDK returns plain client with warning."""
-    from kylin_memory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import _maybe_wrap_anthropic, AnthropicAuxiliaryClient
     plain_client = MagicMock(name='plain_openai')
 
     def _raise_import(*args, **kwargs):
         raise ImportError('no anthropic SDK')
-    with patch('kylin_memory._vendor.agent.anthropic_adapter.build_anthropic_client', side_effect=_raise_import):
+    with patch('kylinmemory._vendor.agent.anthropic_adapter.build_anthropic_client', side_effect=_raise_import):
         import sys as _sys
-        saved = _sys.modules.get('kylin_memory._vendor.agent.anthropic_adapter')
-        _sys.modules['kylin_memory._vendor.agent.anthropic_adapter'] = None
+        saved = _sys.modules.get('kylinmemory._vendor.agent.anthropic_adapter')
+        _sys.modules['kylinmemory._vendor.agent.anthropic_adapter'] = None
         try:
             result = _maybe_wrap_anthropic(plain_client, 'kimi-for-coding', 'sk-kimi-test', 'https://api.kimi.com/coding', api_mode=None)
         finally:
             if saved is not None:
-                _sys.modules['kylin_memory._vendor.agent.anthropic_adapter'] = saved
+                _sys.modules['kylinmemory._vendor.agent.anthropic_adapter'] = saved
             else:
-                _sys.modules.pop('kylin_memory._vendor.agent.anthropic_adapter', None)
+                _sys.modules.pop('kylinmemory._vendor.agent.anthropic_adapter', None)
     assert result is plain_client
     assert not isinstance(result, AnthropicAuxiliaryClient)
 
@@ -112,7 +112,7 @@ def test_resolve_provider_client_kimi_coding_wraps_anthropic(monkeypatch, tmp_pa
     generation 404s on every Kimi Coding Plan user after the "main model
     for every user" aux design shipped.
     """
-    from kylin_memory._vendor.agent.auxiliary_client import resolve_provider_client, AnthropicAuxiliaryClient
+    from kylinmemory._vendor.agent.auxiliary_client import resolve_provider_client, AnthropicAuxiliaryClient
     monkeypatch.setenv('HERMES_HOME', str(tmp_path))
     monkeypatch.setenv('KIMI_API_KEY', 'sk-kimi-faketesttoken123')
     client, model = resolve_provider_client('kimi-coding', 'kimi-for-coding')
