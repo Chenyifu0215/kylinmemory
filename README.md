@@ -41,16 +41,16 @@ uv run kylinmemory --help
 
 ## 配置
 
-创建独立的数据目录，并在其中保存 `config.yaml`：
+默认配置文件位于 `~/.kylinmemory/config.yaml`。首次使用时创建目录：
 
 ```bash
-mkdir -p data
+mkdir -p ~/.kylinmemory
 ```
 
-下面是使用 OpenAI 兼容模型接口和全文检索的最小配置。将模型名称和地址替换为实际服务的配置，模型需要支持工具调用：
+将下面的内容保存为 `~/.kylinmemory/config.yaml`。这是使用 OpenAI 兼容模型接口和全文检索的最小配置；请将模型名称和地址替换为实际服务的配置，模型需要支持工具调用：
 
 ```yaml
-# data/config.yaml
+# ~/.kylinmemory/config.yaml
 model:
   provider: custom
   model: your-model-name
@@ -68,31 +68,31 @@ user_profile:
   enabled: true
 ```
 
-通过环境变量提供 API key，也可以放在数据目录的 `.env` 文件中。环境变量优先：
+上面配置中的 `embedding.mode: disabled` 表示仅使用全文检索；如需启用向量检索，将其改为 `remote` 并填写可用的 embedding 服务地址，可参考 [examples/config.yaml](examples/config.yaml)。
+
+通过环境变量提供 API key，也可以放在数据目录（默认.kylinmemory）的 `.env` 文件中。环境变量优先：
 
 ```bash
 export OPENAI_API_KEY='your-api-key'
 ```
 
-向量检索配置见 [examples/config.yaml](examples/config.yaml)。启用前需要填写可用的 embedding 服务地址；设置 `embedding.mode: disabled` 可仅使用全文检索。
-
-默认数据目录是 `~/.kylinmemory/`。可用 `--home`、Python 的 `home` 参数或 `KYLINMEMORY_HOME` 指定；未指定时也兼容 `HERMES_HOME`。以下示例统一使用 `./data`。
+默认数据目录是 `~/.kylinmemory/`。可用 `--home`、Python 的 `home` 参数或 `KYLINMEMORY_HOME` 指定；未指定时也兼容 `HERMES_HOME`。如果使用自定义数据目录，需要将配置保存为该目录下的 `config.yaml`，并在命令中传入 `--home`。
 
 ## 命令行
 
 ```bash
 # 写入一轮对话
-kylinmemory --home ./data --session demo observe '以后请叫我小王。' --assistant '好的，小王。'
+kylinmemory --session demo observe '以后请叫我小王。' --assistant '好的，小王。'
 
 # 检索记忆
-kylinmemory --home ./data --session demo recall '小王' --limit 5
+kylinmemory --session demo recall '小王' --limit 5
 
 # 获取供模型使用的上下文
-kylinmemory --home ./data --session demo context '怎么称呼用户？'
+kylinmemory --session demo context '怎么称呼用户？'
 
 # 查看记忆状态和场景列表
-kylinmemory --home ./data --session demo status
-kylinmemory --home ./data --session demo scenes
+kylinmemory --session demo status
+kylinmemory --session demo scenes
 ```
 
 命令输出 JSON。每条独立命令退出时会提交并关闭当前实例；需要持续处理多轮对话时，使用下面的 `serve` 或长期存活的 Python 实例。
@@ -102,7 +102,7 @@ kylinmemory --home ./data --session demo scenes
 启动持续运行的本地服务：
 
 ```bash
-kylinmemory --home ./data --session demo serve
+kylinmemory --session demo serve
 ```
 
 标准输入每行接收一个 JSON 请求，标准输出每行返回一个 JSON 结果，日志写入标准错误。它使用本地进程通信，不提供 HTTP 或 MCP 接口。
@@ -138,7 +138,6 @@ kylinmemory --home ./data --session demo serve
 from kylin_memory import MemorySystem
 
 with MemorySystem(
-    "./data",
     session_id="session-1",
     user_id="user-1",
     platform="api",
@@ -163,7 +162,7 @@ with MemorySystem(
 导入历史对话时，向 `ingest()` 传入消息列表：
 
 ```python
-with MemorySystem("./data", session_id="history-1") as memory:
+with MemorySystem(session_id="history-1") as memory:
     memory.ingest(
         [
             {"role": "user", "content": "以后请叫我小王。", "timestamp": 1700000000},
@@ -174,7 +173,7 @@ with MemorySystem("./data", session_id="history-1") as memory:
     memory.commit()
 ```
 
-`backfill=True` 仅用于新建的空会话，保留历史时间戳。导入为追加操作，重复导入会重复写入。也可使用 `kylinmemory --home ./data --session history-1 ingest messages.json --backfill` 导入 JSON 文件。
+`backfill=True` 仅用于新建的空会话，保留历史时间戳。导入为追加操作，重复导入会重复写入。也可使用 `kylinmemory --session history-1 ingest messages.json --backfill` 导入 JSON 文件。
 
 已有应用可通过 `client=` 注入 OpenAI 兼容客户端，或通过 `main_runtime=` 回调提供实时模型配置。
 
